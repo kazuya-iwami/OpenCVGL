@@ -60,7 +60,7 @@
       <CommandLineArguments>
          <CommandLineArgument
             argument = "/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/fruits.jpg"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
       </CommandLineArguments>
       <AdditionalOptions>
