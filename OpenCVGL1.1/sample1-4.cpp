@@ -60,9 +60,12 @@ int main(int argc, char *argv[])
     avg_img = cv::Scalar(0,0,0);
     
     for( int i = 0; i < INIT_TIME; i++){
+        if(frame.empty()){
+            break;
+        }
         cap >> frame;
         cv::Mat tmp;
-        frame.convertTo(tmp, avg_img.type());                           //  å…¥åŠ›é…åˆ—ã«å¯¾ã—ã¦ã‚¹ã‚±ãƒ¼ãƒªãƒ³ã‚°ã‚’è¡Œã†
+        frame.convertTo(tmp, avg_img.type());
         cv::accumulate(tmp, avg_img);                           // ç”»åƒå…¨ä½“ã‚’ç´¯ç®—å™¨ã«åŠ ãˆã‚‹
     }
     
@@ -79,7 +82,7 @@ int main(int argc, char *argv[])
         cv::accumulate(tmp_img, sgm_img);
     }
     
-    /* hatena */                           // å…¥åŠ›é…åˆ—ã«å¯¾ã—ã¦ã‚¹ã‚±ãƒ¼ãƒªãƒ³ã‚°ã‚’è¡Œã†
+    sgm_img.convertTo(sgm_img, -1,1.0/INIT_TIME);                           // å…¥åŠ›é…åˆ—ã«å¯¾ã—ã¦ã‚¹ã‚±ãƒ¼ãƒªãƒ³ã‚°ã‚’è¡Œã†
     
     printf("Background statistics initialization finish\n");
     

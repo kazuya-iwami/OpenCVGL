@@ -1,77 +1,167 @@
-//
-//  main.cpp
-//  OpenCVGL1.1
-//
-//  Created by Iwami kazuya on 2014/11/04.
-//  Copyright (c) 2014年 kazuya. All rights reserved.
-//
-
-
-//ここ参照
-//http://nantekottai.com/2014/04/16/opencv-xcode5-homebrew/
-
-//#include <iostream>
 #include <core.hpp>
-#include <highgui.hpp>
-#include <objdetect.hpp>
 #include <imgproc.hpp>
+#include <highgui.hpp>
 #include <stdio.h>
 
-int size_of_mosaic = 0;
+#define FLAG 1 //0:direct access 1:built-in function
 
-int main (int argc, char **argv)
-{
-    std::string cascadeName = "/usr/local/share/OpenCV/haarcascades/haarcascade_frontalface_alt.xml";
-    cv::CascadeClassifier cascade;
-    if(!cascade.load(cascadeName)){
-        printf("ERROR: cascadefile見つからん！\n");
-        return -1;
+const char* preset_file = "/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/fruits.jpg";
+
+void convertColorToGray(cv::Mat &input,cv:: Mat &processed);
+void blur(cv::Mat &input, cv::Mat &processed);
+void edge(cv::Mat &input, cv::Mat &processed);
+
+int main(int argc, char *argv[]){
+    const char *input_file;
+    //prepare Mat objects for input image and output image
+    cv::Mat input,processed;
+    
+    if(argc==2){
+        input_file=argv[1];
+    }else{
+        input_file=preset_file;
     }
     
-    cv::Mat frame;
-    cv::VideoCapture cap;
-    cap.open(0);
-    cap >> frame;
-    
-    cv::namedWindow("result",1);
-    cv::createTrackbar("size", "result", &size_of_mosaic, 30,0);
-    
-    double scale = 4.0;
-    cv::Mat gray, smallImg(cv::saturate_cast<int>(frame.rows/scale),cv::saturate_cast<int>(frame.cols/scale),CV_8UC1);
-    
-    for(;;){
-        cap >> frame;
-        cv::cvtColor(frame, gray, CV_BGR2GRAY);
-        cv::resize(gray, smallImg, smallImg.size(),0,0,cv::INTER_LINEAR);
-        cv::equalizeHist(smallImg, smallImg);
-        
-        std::vector<cv::Rect> faces;
-        cascade.detectMultiScale(smallImg, faces,1.1,2,CV_HAAR_SCALE_IMAGE,cv::Size(20,20));
-        
-        int i;
-        for (i=0; i<faces.size(); i++) {
-            cv::Point center;
-            int radius;
-            center.x = cv::saturate_cast<int>((faces[i].x + faces[i].width*0.5)*scale);
-            center.y = cv::saturate_cast<int>((faces[i].y + faces[i].height*0.5)*scale);
-            radius = cv::saturate_cast<int>((faces[i].width + faces[i].height)*0.25*scale);
-            if(size_of_mosaic < 1)size_of_mosaic=1;
-            cv::Rect roi_rect(center.x-radius,center.y-radius,radius*2,radius*2);
-            cv::Mat mosaic = frame(roi_rect);
-            cv::Mat tmp = frame(roi_rect);
-            cv::resize(mosaic, tmp, cv::Size(radius/size_of_mosaic,radius/size_of_mosaic),0,0);
-            cv::resize(tmp, mosaic, cv::Size(radius*2,radius*2),0,0,CV_INTER_NN);
-        }
-        
-        cv::imshow("result", frame);
-        
-        int key = cv::waitKey(10);
-        if(key == 'q' || key == 'Q')
-            break;
-        
-        
+    //2.read an image from the specified file
+    input=cv::imread(input_file,1);
+    if(input.empty()){
+        fprintf(stderr,"cannot open %s\n",input_file);
+        exit(0);
     }
+    
+    //convertColorToGray(input,processed);
+    edge(input,processed);
+    //cv::GaussianBlur(input, processed,cv::Size(5,5),30,30);
+    //cv::Sobel(input, processed,  -1, 1, 1,7);
+    //5.create windows
+    
+    cv::namedWindow("original image",1);
+    cv::namedWindow("processed image",1);
+    
+    //6.show images
+    
+    cv::imshow("original image",input);
+    cv::imshow("processed image",processed);
+    
+    //7.wait key input
+    cv::waitKey(0);
+    
+    //8.save the processed result
+    cv::imwrite("/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/processd.jpg",processed);
     
     return 0;
     
+}
+
+void blur(cv::Mat &input, cv::Mat &processed){
+    
+    cv::Size s=input.size();
+    processed.create(s,CV_8UC3);
+    
+    int filter[3][3]={
+        {1,2,1},
+        {2,4,2},
+        {1,2,1}};
+    int sum_of_filter = 16;
+    
+    
+    for (int i = 0; i < s.height-2; i++){
+        
+        uchar *ptr1;
+        cv::Vec3b *ptr2;
+        
+        for (int j = 0; j < s.width-2; j++){
+            cv::Vec3b sum = {0,0,0};
+            for (int k = 0; k < 3; k++){
+                for (int l = 0; l < 3; l++){
+                    ptr1=input.ptr<uchar>(i+k,j+l);
+                    
+                    sum[0] += filter[k][l]*(uchar)ptr1[0]/sum_of_filter;
+                    sum[1] += filter[k][l]*(uchar)ptr1[1]/sum_of_filter;
+                    sum[2] += filter[k][l]*(uchar)ptr1[2]/sum_of_filter;
+                }
+            }
+            ptr2=processed.ptr<cv::Vec3b>(i,j);
+            *ptr2 = sum;
+        }
+    }
+    
+    
+}
+
+void edge(cv::Mat &input, cv::Mat &processed){
+    
+    cv::Size s=input.size();
+    processed.create(s,CV_8UC3);
+    
+    
+    
+    
+    int filter[3][3]={
+        {1,0,-1},
+        {2,0,-2},
+        {1,0,-1}};
+    int sum_of_filter = 16;
+    
+    
+    for (int i = 0; i < s.height-2; i++){
+        
+        uchar *ptr1;
+        cv::Vec3b *ptr2;
+        
+        for (int j = 0; j < s.width-2; j++){
+            cv::Vec3b sum = {0,0,0};
+            for (int k = 0; k < 3; k++){
+                for (int l = 0; l < 3; l++){
+                    ptr1=input.ptr<uchar>(i+k,j+l);
+                    
+                    sum[0] += filter[k][l]*(uchar)ptr1[0]/sum_of_filter;
+                    sum[1] += filter[k][l]*(uchar)ptr1[1]/sum_of_filter;
+                    sum[2] += filter[k][l]*(uchar)ptr1[2]/sum_of_filter;
+                }
+            }
+            ptr2=processed.ptr<cv::Vec3b>(i,j);
+            *ptr2 = sum;
+        }
+    }
+    
+    
+}
+
+
+
+void convertColorToGray(cv::Mat &input,cv::Mat &processed)
+{
+#if FLAG //use built-in function
+    
+    //4.convert color to gray
+    cv::Mat temp;
+    std::vector<cv::Mat> planes;
+    cv::cvtColor(input,temp,CV_BGR2YCrCb);
+    cv::split(temp,planes);
+    processed=planes[0];
+#else
+    //3.create Mat for output image
+    cv::Size s=input.size();
+    processed.create(s,CV_8UC1);
+    
+    for (int j=0;j<s.height;j++){
+        uchar *ptr1,*ptr2;
+        ptr1=input.ptr<uchar>(j);
+        ptr2=processed.ptr<uchar>(j);
+        
+        //4.convert color to gray
+        
+        for(int i=0;i<s.width;i++){
+            double y=0.114*(double)ptr1[0]+0.587*(double)ptr1[1]+0.299*(double)ptr1[2];
+            if(y>255){y=255;}
+            if(y<0){y=0;}
+            
+            *ptr2=(uchar)y;
+            
+            ptr1 +=3;
+            ptr2++;
+        }
+    }
+#endif
 }

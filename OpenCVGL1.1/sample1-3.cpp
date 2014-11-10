@@ -10,8 +10,8 @@
 #include <highgui.hpp>
 #include <stdio.h>
 
-#define IN_VIDEO_FILE "sample_video_input.avi"
-#define OUT_VIDEO_FILE "sample_video_output.avi"
+#define IN_VIDEO_FILE "/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/sample_video_input.avi"
+#define OUT_VIDEO_FILE "/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/sample_video_output.avi"
 
 int main(int argc, char *argv[]){
     
@@ -31,7 +31,7 @@ int main(int argc, char *argv[]){
     
     cv::namedWindow("video", 1);
     cv::VideoWriter output_video;                           // éŒ²ç”»ç”¨ã®ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’ç”¨æ„ã™ã‚‹
-    output_video.open(OUT_VIDEO_FILE, CV_FOURCC('M', 'J', 'P', 'G'), 30,cv::Size(640,480));                           // å‹•ç”»ã®ä¿å­˜ã®ãŸã‚ã®åˆæœŸåŒ–ã‚’è¡Œãªã†
+    output_video.open(OUT_VIDEO_FILE, CV_FOURCC('W', 'R', 'L', 'E'), 30,cv::Size(1280,720));                           // å‹•ç”»ã®ä¿å­˜ã®ãŸã‚ã®åˆæœŸåŒ–ã‚’è¡Œãªã†
     /* using "MJPG" as the video codec */
     
     if(!cap.isOpened() || !output_video.isOpened()){

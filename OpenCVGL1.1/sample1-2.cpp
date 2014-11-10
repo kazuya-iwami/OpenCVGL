@@ -10,9 +10,10 @@
 #include <photo.hpp>
 #include <highgui.hpp>
 #include <stdio.h>
+#include <algorithm>
 
 cv::Mat inpaint_mask;
-cv::Mat original_image, whiteLined_image, inpainted;
+cv::Mat original_image, whiteLined_image, inpainted, mask_image;
 
 cv::Point prev_pt;
 
@@ -46,10 +47,30 @@ void on_mouse(int event, int x , int y , int flags, void *){
     }
 }
 
+void on_mouse_reverse(int event, int x , int y , int flags, void *){
+    if(whiteLined_image.empty()){
+        return;
+    }
+    
+    if(event == CV_EVENT_LBUTTONUP ){//マウスを離した際の反応
+        cv::Point pt(x, y);
+        cv::Mat roi(whiteLined_image, cv::Rect(prev_pt,pt));
+        //マスキング
+        bitwise_not(roi, roi);
+        cv::imshow("image",whiteLined_image);
+        prev_pt = cv::Point(-1,-1);// init the start point
+    }
+    else if(event == CV_EVENT_LBUTTONDOWN){
+        prev_pt = cv::Point(x,y);                          // set the start point
+    }
+}
+
+
+
 int main(int argc, char *argv[]){
     
     // 1. read image file
-    char *filename = (argc >= 2) ? argv[1] : (char*)"fruits.jpg";
+    char *filename = (argc >= 2) ? argv[1] : (char*)"/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/fruits.jpg";
     original_image = cv::imread(filename);
     if(original_image.empty()){
         printf("ERROR: image not found!\n");
@@ -73,11 +94,13 @@ int main(int argc, char *argv[]){
     inpaint_mask = cv::Scalar(0);// å…¨ã¦ã®ç”»ç´ ã®å€¤ã‚’0ã«åˆæœŸåŒ–
     inpainted = cv::Scalar(0);
     
+    mask_image = cv::Scalar(0);
+    
     // 4. show image to window for generating mask
     cv::imshow("image", whiteLined_image);
     
     // 5. set callback function for mouse operations
-    cv::setMouseCallback("image", on_mouse,0);                    // ãƒžã‚¦ã‚¹æ“ä½œã®ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°ã‚’ç™»éŒ²
+    cv::setMouseCallback("image", on_mouse_reverse,0);                    // ãƒžã‚¦ã‚¹æ“ä½œã®ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯é–¢æ•°ã‚’ç™»éŒ²
     
     bool loop_flag = true;
     while(loop_flag){

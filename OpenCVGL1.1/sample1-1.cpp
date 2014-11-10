@@ -5,10 +5,11 @@
 
 #define FLAG 1 //0:direct access 1:built-in function
 
-const char* preset_file = "fruits.jpg";
+const char* preset_file = "/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/fruits.jpg";
 
 void convertColorToGray(cv::Mat &input,cv:: Mat &processed);
 void blur(cv::Mat &input, cv::Mat &processed);
+void edge(cv::Mat &input, cv::Mat &processed);
 
 int main(int argc, char *argv[]){
     const char *input_file;
@@ -29,12 +30,13 @@ int main(int argc, char *argv[]){
     }
     
     //convertColorToGray(input,processed);
-    blur(input,processed);
-    
+    //edge(input,processed);
+    //cv::GaussianBlur(input, processed,cv::Size(5,5),10,10);
+    cv::Sobel(input, processed,  -1, 1, 1,5);
     //5.create windows
     
-    cv::namedWindow("original Image",1);
-    cv::namedWindow("processed Image",1);
+    cv::namedWindow("original image",1);
+    cv::namedWindow("processed image",1);
     
     //6.show images
     
@@ -91,6 +93,9 @@ void edge(cv::Mat &input, cv::Mat &processed){
     
     cv::Size s=input.size();
     processed.create(s,CV_8UC3);
+    
+    
+    
     
     int filter[3][3]={
         {1,2,1},

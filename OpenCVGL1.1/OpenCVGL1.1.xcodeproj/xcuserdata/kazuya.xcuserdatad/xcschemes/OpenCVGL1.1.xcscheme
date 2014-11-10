@@ -62,6 +62,10 @@
             argument = "/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/fruits.jpg"
             isEnabled = "NO">
          </CommandLineArgument>
+         <CommandLineArgument
+            argument = "/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/sample.avi"
+            isEnabled = "YES">
+         </CommandLineArgument>
       </CommandLineArguments>
       <AdditionalOptions>
       </AdditionalOptions>
