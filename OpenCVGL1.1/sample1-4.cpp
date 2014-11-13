@@ -11,6 +11,8 @@
 #include <imgproc.hpp>
 #include <stdio.h>
 
+const char* preset_file = "/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/fruits.jpg";
+
 int main(int argc, char *argv[])
 {
     int INIT_TIME = 50;
@@ -24,6 +26,7 @@ int main(int argc, char *argv[])
     cv::Mat avg_img, sgm_img;
     cv::Mat lower_img, upper_img, tmp_img;
     cv::Mat dst_img, msk_img;
+    cv::Mat picture;
     
     // 1. initialize VideoCapture
     if(argc >= 2){
@@ -60,10 +63,11 @@ int main(int argc, char *argv[])
     avg_img = cv::Scalar(0,0,0);
     
     for( int i = 0; i < INIT_TIME; i++){
+        cap >> frame;
         if(frame.empty()){
             break;
         }
-        cap >> frame;
+        
         cv::Mat tmp;
         frame.convertTo(tmp, avg_img.type());
         cv::accumulate(tmp, avg_img);                           // ç”»åƒå…¨ä½“ã‚’ç´¯ç®—å™¨ã«åŠ ãˆã‚‹
@@ -74,6 +78,9 @@ int main(int argc, char *argv[])
     
     for( int i = 0; i < INIT_TIME; i++){
         cap >> frame;
+        if(frame.empty()){
+            break;
+        }
         frame.convertTo(tmp_img, avg_img.type());                          // èƒŒæ™¯ã®è¼åº¦æŒ¯å¹…ã®åˆæœŸå€¤ã‚’è¨ˆç®—ã™ã‚‹
         cv::subtract(tmp_img, avg_img, tmp_img);
         cv::pow(tmp_img, 2.0, tmp_img);
@@ -90,10 +97,13 @@ int main(int argc, char *argv[])
     bool loop_flag = true;
     while(loop_flag){
         cap >> frame;
+        if(frame.empty()){
+            break;
+        }
         frame.convertTo(tmp_img, tmp_img.type());                           // å…¥åŠ›é…åˆ—ã«å¯¾ã—ã¦å¤‰æ›ã‚’è¡Œã†
         
         // 4. check whether pixels are background or not
-        cv::subtract(tmp_img, avg_img, lower_img);                         // èƒŒæ™¯ã¨ãªã‚Šã†ã‚‹ç”»ç´ ã®è¼åº¦å€¤ã®ç¯„å›²ã‚’ãƒã‚§ãƒƒã‚¯ã™ã‚‹
+        cv::subtract(avg_img, sgm_img, lower_img);                         // èƒŒæ™¯ã¨ãªã‚Šã†ã‚‹ç”»ç´ ã®è¼åº¦å€¤ã®ç¯„å›²ã‚’ãƒã‚§ãƒƒã‚¯ã™ã‚‹
         cv::subtract(lower_img, Zeta, lower_img);
         cv::add(avg_img, sgm_img, upper_img);
         cv::add(upper_img, Zeta, upper_img);
@@ -108,11 +118,20 @@ int main(int argc, char *argv[])
         cv::accumulateWeighted(frame, avg_img, B_PARAM,msk_img);                           // é–¢æ•
         cv::accumulateWeighted(tmp_img, sgm_img, B_PARAM,msk_img);
         
+        //反転前のを用いて背景をマスキングする
+        
+        
         cv::bitwise_not(msk_img, msk_img);                          // ç‰©ä½“é ˜åŸŸã¨åˆ¤æ–­ã•ã‚ŒãŸé ˜åŸŸã§ã¯è¼åº¦æŒ¯å¹…ã®ã¿ã‚’æ›´æ–°ã™ã‚‹
         cv::accumulateWeighted(tmp_img, sgm_img, T_PARAM,msk_img);
         
         dst_img = cv::Scalar(0);
         frame.copyTo(dst_img, msk_img);
+        cv::Mat reverse_msk_img;
+        cv::bitwise_not(msk_img, reverse_msk_img);
+        picture=cv::imread(preset_file,1);
+        cv::resize(picture, picture, dst_img.size());
+        picture.convertTo(picture, dst_img.type());
+        picture.copyTo(dst_img,reverse_msk_img);
         
         cv::imshow("Input", frame);
         cv::imshow("FG", dst_img);

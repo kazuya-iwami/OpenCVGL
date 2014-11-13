@@ -7,7 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		E556646B1A108DCA00C5DAD6 /* face_detect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E55664691A108DCA00C5DAD6 /* face_detect.cpp */; };
+		E505D0BA1A1464C9007F988D /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E505D0B91A1464C9007F988D /* GLUT.framework */; };
+		E505D0BC1A1464DA007F988D /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E505D0BB1A1464DA007F988D /* OpenGL.framework */; };
+		E505D0D11A1493A1007F988D /* sample1-5.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E59AE76C1A08AC6B00A470B8 /* sample1-5.cpp */; };
 		E59AE75E1A089D5800A470B8 /* libopencv_highgui.2.4.9.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E59AE75D1A089D5800A470B8 /* libopencv_highgui.2.4.9.dylib */; };
 		E59AE7601A089D6E00A470B8 /* libopencv_core.2.4.9.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E59AE75F1A089D6E00A470B8 /* libopencv_core.2.4.9.dylib */; };
 		E59AE7621A08AADE00A470B8 /* libopencv_objdetect.2.4.9.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E59AE7611A08AADE00A470B8 /* libopencv_objdetect.2.4.9.dylib */; };
@@ -28,8 +30,15 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		E505D0B91A1464C9007F988D /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = System/Library/Frameworks/GLUT.framework; sourceTree = SDKROOT; };
+		E505D0BB1A1464DA007F988D /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
+		E505D0BD1A146536007F988D /* sample2-1.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "sample2-1.cpp"; sourceTree = "<group>"; };
+		E505D0BF1A146CC4007F988D /* sample2-2.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "sample2-2.cpp"; sourceTree = "<group>"; };
+		E505D0C11A147481007F988D /* sample2-3.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "sample2-3.cpp"; sourceTree = "<group>"; };
+		E505D0C31A14758D007F988D /* sample2-4.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "sample2-4.cpp"; sourceTree = "<group>"; };
+		E505D0C51A14759E007F988D /* sample2-5.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "sample2-5.cpp"; sourceTree = "<group>"; };
 		E55664691A108DCA00C5DAD6 /* face_detect.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = face_detect.cpp; sourceTree = "<group>"; };
-		E556646A1A108DCA00C5DAD6 /* face_detect.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = face_detect.h; sourceTree = "<group>"; };
+		E57781411A11D70C0081EC2F /* hand_detect.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hand_detect.cpp; sourceTree = "<group>"; };
 		E59AE7531A08999E00A470B8 /* OpenCVGL1.1 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = OpenCVGL1.1; sourceTree = BUILT_PRODUCTS_DIR; };
 		E59AE7561A08999E00A470B8 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		E59AE75D1A089D5800A470B8 /* libopencv_highgui.2.4.9.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libopencv_highgui.2.4.9.dylib; path = ../../../../../usr/local/Cellar/opencv/2.4.9/lib/libopencv_highgui.2.4.9.dylib; sourceTree = "<group>"; };
@@ -49,6 +58,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E505D0BC1A1464DA007F988D /* OpenGL.framework in Frameworks */,
+				E505D0BA1A1464C9007F988D /* GLUT.framework in Frameworks */,
 				E5F108151A0B2CDC00997782 /* libopencv_photo.2.4.9.dylib in Frameworks */,
 				E59AE7641A08AB0400A470B8 /* libopencv_imgproc.2.4.9.dylib in Frameworks */,
 				E59AE7621A08AADE00A470B8 /* libopencv_objdetect.2.4.9.dylib in Frameworks */,
@@ -63,6 +74,8 @@
 		E59AE74A1A08999E00A470B8 = {
 			isa = PBXGroup;
 			children = (
+				E505D0BB1A1464DA007F988D /* OpenGL.framework */,
+				E505D0B91A1464C9007F988D /* GLUT.framework */,
 				E5F108141A0B2CDC00997782 /* libopencv_photo.2.4.9.dylib */,
 				E59AE7631A08AB0400A470B8 /* libopencv_imgproc.2.4.9.dylib */,
 				E59AE7611A08AADE00A470B8 /* libopencv_objdetect.2.4.9.dylib */,
@@ -99,7 +112,12 @@
 				E5F108121A0B2C7D00997782 /* sample1-4.cpp */,
 				E59AE76C1A08AC6B00A470B8 /* sample1-5.cpp */,
 				E55664691A108DCA00C5DAD6 /* face_detect.cpp */,
-				E556646A1A108DCA00C5DAD6 /* face_detect.h */,
+				E57781411A11D70C0081EC2F /* hand_detect.cpp */,
+				E505D0BD1A146536007F988D /* sample2-1.cpp */,
+				E505D0BF1A146CC4007F988D /* sample2-2.cpp */,
+				E505D0C11A147481007F988D /* sample2-3.cpp */,
+				E505D0C31A14758D007F988D /* sample2-4.cpp */,
+				E505D0C51A14759E007F988D /* sample2-5.cpp */,
 			);
 			name = sample;
 			sourceTree = "<group>";
@@ -160,7 +178,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E556646B1A108DCA00C5DAD6 /* face_detect.cpp in Sources */,
+				E505D0D11A1493A1007F988D /* sample1-5.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -253,6 +271,7 @@
 					"$(inherited)",
 					/usr/local/Cellar/opencv/2.4.9/lib,
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -269,6 +288,7 @@
 					"$(inherited)",
 					/usr/local/Cellar/opencv/2.4.9/lib,
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
