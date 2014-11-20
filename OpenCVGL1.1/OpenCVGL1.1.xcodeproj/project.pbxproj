@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		E505D0BA1A1464C9007F988D /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E505D0B91A1464C9007F988D /* GLUT.framework */; };
 		E505D0BC1A1464DA007F988D /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E505D0BB1A1464DA007F988D /* OpenGL.framework */; };
-		E505D0D11A1493A1007F988D /* sample1-5.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E59AE76C1A08AC6B00A470B8 /* sample1-5.cpp */; };
+		E53B30DB1A1C6F490027C30C /* blackboard.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E53B30D51A1B24D60027C30C /* blackboard.cpp */; };
 		E59AE75E1A089D5800A470B8 /* libopencv_highgui.2.4.9.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E59AE75D1A089D5800A470B8 /* libopencv_highgui.2.4.9.dylib */; };
 		E59AE7601A089D6E00A470B8 /* libopencv_core.2.4.9.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E59AE75F1A089D6E00A470B8 /* libopencv_core.2.4.9.dylib */; };
 		E59AE7621A08AADE00A470B8 /* libopencv_objdetect.2.4.9.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E59AE7611A08AADE00A470B8 /* libopencv_objdetect.2.4.9.dylib */; };
@@ -37,6 +37,8 @@
 		E505D0C11A147481007F988D /* sample2-3.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "sample2-3.cpp"; sourceTree = "<group>"; };
 		E505D0C31A14758D007F988D /* sample2-4.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "sample2-4.cpp"; sourceTree = "<group>"; };
 		E505D0C51A14759E007F988D /* sample2-5.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "sample2-5.cpp"; sourceTree = "<group>"; };
+		E53B30D51A1B24D60027C30C /* blackboard.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = blackboard.cpp; sourceTree = "<group>"; };
+		E53B30D61A1B24D60027C30C /* blackboard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = blackboard.h; sourceTree = "<group>"; };
 		E55664691A108DCA00C5DAD6 /* face_detect.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = face_detect.cpp; sourceTree = "<group>"; };
 		E57781411A11D70C0081EC2F /* hand_detect.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hand_detect.cpp; sourceTree = "<group>"; };
 		E59AE7531A08999E00A470B8 /* OpenCVGL1.1 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = OpenCVGL1.1; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -118,6 +120,8 @@
 				E505D0C11A147481007F988D /* sample2-3.cpp */,
 				E505D0C31A14758D007F988D /* sample2-4.cpp */,
 				E505D0C51A14759E007F988D /* sample2-5.cpp */,
+				E53B30D51A1B24D60027C30C /* blackboard.cpp */,
+				E53B30D61A1B24D60027C30C /* blackboard.h */,
 			);
 			name = sample;
 			sourceTree = "<group>";
@@ -178,7 +182,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E505D0D11A1493A1007F988D /* sample1-5.cpp in Sources */,
+				E53B30DB1A1C6F490027C30C /* blackboard.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

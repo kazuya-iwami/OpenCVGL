@@ -59,8 +59,8 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/fruits.jpg"
-            isEnabled = "NO">
+            argument = "/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/blackboard_item.avi"
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/sample.avi"

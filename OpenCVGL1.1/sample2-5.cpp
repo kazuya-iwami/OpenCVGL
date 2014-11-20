@@ -6,12 +6,14 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <core.hpp>
+#include <highgui.hpp>
 
 #define WINDOW_X (500)
 #define WINDOW_Y (500)
 #define WINDOW_NAME "test5"
-#define TEXTURE_HEIGHT (512)
-#define TEXTURE_WIDTH (512)
+#define TEXTURE_HEIGHT (1290)
+#define TEXTURE_WIDTH (1290)
 
 void init_GL(int argc, char *argv[]);
 void init();
@@ -32,6 +34,7 @@ double g_distance = 10.0;
 bool g_isLeftButtonOn = false;
 bool g_isRightButtonOn = false;
 GLuint g_TextureHandles[3] = {0,0,0};
+cv::VideoCapture cap;    
 
 int main(int argc, char *argv[]){
     /* OpenGLの初期化 */
@@ -68,6 +71,8 @@ void init(){
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     }
     
+    
+    
     set_texture();
 }
 
@@ -78,6 +83,7 @@ void set_callback_functions(){
     glutMotionFunc(glut_motion);
     glutPassiveMotionFunc(glut_motion);
     glutIdleFunc(glut_idle);
+    cap.open(0);
 }
 
 void glut_keyboard(unsigned char key, int x, int y){
@@ -162,6 +168,12 @@ void glut_idle(){
         glBindTexture(GL_TEXTURE_2D, g_TextureHandles[2]);
     }
     
+    cv::Mat frame;
+    cap >> frame;
+    cv::cvtColor(frame, frame, CV_BGR2RGB);
+    glBindTexture(GL_TEXTURE_2D, g_TextureHandles[0]);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, (TEXTURE_WIDTH - frame.cols)/2, (TEXTURE_HEIGHT- frame.rows)/2, frame.cols, frame.rows, GL_RGB, GL_UNSIGNED_BYTE, frame.data);
+    
     counter++;
     if(counter > 3000) counter = 0;
     
@@ -196,16 +208,24 @@ void draw_pyramid(){
     glVertex3dv(pointD);
     glEnd();
     
-    glColor3d(1.0, 0.0, 1.0);
+    //glBindTexture(GL_TEXTURE_2D, g_TextureHandles[1]);
+    glEnable(GL_TEXTURE_2D);
+    glColor3d(1.0, 1.0, 1.0);
     glBegin(GL_TRIANGLES);
+    glTexCoord2d(0.0, 0.0);
     glVertex3dv(pointO);
+    glTexCoord2d(0.0, 1.0);
     glVertex3dv(pointD);
+    glTexCoord2d(1.0, 0.0);
     glVertex3dv(pointA);
     glEnd();
     
-    glColor3d(1.0, 1.0, 1.0);
+    glDisable(GL_TEXTURE_2D);
+
     
+   // glBindTexture(GL_TEXTURE_2D, g_TextureHandles[0]);
     glEnable(GL_TEXTURE_2D);
+
     
     glBegin(GL_POLYGON);
     glTexCoord2d(1.0, 0.0); 
@@ -218,18 +238,32 @@ void draw_pyramid(){
     glVertex3dv(pointD);
     glEnd();
     
-    glDisable(GL_TEXTURE_2D);
-}
+     glDisable(GL_TEXTURE_2D);
+    }
 
 void set_texture(){
     const char* inputFileNames[3] = {"/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/flower1.jpg", "/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/flower2.jpg", "/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/flower3.jpg"};
     for(int i=0; i<3; i++){
         cv::Mat input = cv::imread(inputFileNames[i],1);
+        cv::Mat frame;
+        
+        cap >> frame;
+//        if(frame.empty()){
+//            break;
+//        }
+
         // BGR -> RGBの変換
         cv::cvtColor(input, input, CV_BGR2RGB);
-        
         glBindTexture(GL_TEXTURE_2D, g_TextureHandles[i]);
-        glTexSubImage2D(GL_TEXTURE_2D, 0, (TEXTURE_WIDTH - input.cols)/2, (TEXTURE_HEIGHT- input.rows)/2, input.cols, input.rows, GL_RGB, GL_UNSIGNED_BYTE, input.data);
+        
+        if(i!=0){
+            
+            glTexSubImage2D(GL_TEXTURE_2D, 0, (TEXTURE_WIDTH - input.cols)/2, (TEXTURE_HEIGHT- input.rows)/2, input.cols, input.rows, GL_RGB, GL_UNSIGNED_BYTE, input.data);
+        }else{
+            
+            glTexSubImage2D(GL_TEXTURE_2D, 0, (TEXTURE_WIDTH - frame.cols)/2, (TEXTURE_HEIGHT- frame.rows)/2, frame.cols, frame.rows, GL_RGB, GL_UNSIGNED_BYTE, frame.data);
+            
+        }
         
     }    
 }
