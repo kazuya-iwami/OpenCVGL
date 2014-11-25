@@ -21,6 +21,7 @@ using namespace cv;
 using namespace std;
 
 void detectLine(Mat &input,Mat &processed);
+void setLabel(cv::Mat& im, const std::string label, std::vector<cv::Point>& contour,Scalar color);
 
 int main (int argc, char **argv)
 {
@@ -107,35 +108,59 @@ void detectLine(Mat &input,Mat &processed){
     RNG rng(12345);
     
     cvtColor(input,canny_output,CV_BGR2GRAY);  //色空間の変換(グレイスケール化)
-    blur(canny_output, canny_output, Size(5,5) );//平滑化して誤差を減らす
+    blur(canny_output, canny_output, Size(3,3) );//平滑化して誤差を減らす
     threshold(canny_output, canny_output, 115, 255, CV_THRESH_BINARY);//二値化
     Canny (canny_output, canny_output, 50,150, 3);//canny法によるエッジ検出
     
    
-//    
-//    findContours(canny_output, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0) );
-//
-//    Mat drawing = Mat::zeros( canny_output.size(), CV_8UC3 );
-//    
-//    for( int i=0; i < (int)contours.size(); i++ ) {
-//        for(int j=0; j<(int)contours[i].size(); j++){
-//            circle(drawing, contours[i][j], 10, Scalar(100,200,0),1);
-//        }
-//    }
-//
-//    for( int i = 0; i< contours.size(); i++ )
-//    {
-//        Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
-//        drawContours( drawing, contours, i, color, 2, 8, hierarchy, 0, Point() );
-//    }
-//    
+    
+    findContours(canny_output, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0) );
+
+    Mat drawing = Mat::zeros( canny_output.size(), CV_8UC3 );
+    vector<cv::Point> approx;
+    for( int i = 0; i< contours.size(); i++ )
+    {
+        //Ramer–Douglas–Peucker algorithmによる多角形近似
+        approxPolyDP(cv::Mat(contours[i]), approx, cv::arcLength(cv::Mat(contours[i]), true) * 0.013,true);
+        if (std::fabs(cv::contourArea(contours[i])) < 30 )//小さいobjectは排除
+            continue;
+        
+        Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
+        drawContours( drawing, contours, i, color, 1, 8, hierarchy, 0, Point() );
+        
+        //    for(int j=0; j<(int)contours[i].size(); j++){//特徴点の表示
+        //        line(drawing, contours[i][j], contours[i][j], Scalar(200,250,250));
+        //    }
+        
+        for(int k=0; k<(int)approx.size(); k++){//頂点の表示
+            circle(drawing, approx[k], 3,color,2);
+        }
+        
+        setLabel(drawing, to_string(i), approx,color);
+    }
+
     
     // (5)検出結果表示用のウィンドウを確保し表示する
     
-    canny_output.copyTo(processed);
+    drawing.copyTo(processed);
     
 
     
+}
+
+void setLabel(cv::Mat& im, const std::string label, std::vector<cv::Point>& contour,Scalar color)
+{
+    int fontface = cv::FONT_HERSHEY_SIMPLEX;
+    double scale = 0.4;
+    int thickness = 1;
+    int baseline = 0;
+    
+    cv::Size text = cv::getTextSize(label, fontface, scale, thickness, &baseline);
+    cv::Rect r = cv::boundingRect(contour);
+    
+    cv::Point pt(r.x + ((r.width - text.width) / 2), r.y + ((r.height + text.height) / 2));
+    cv::rectangle(im, pt + cv::Point(0, baseline), pt + cv::Point(text.width, -text.height), CV_RGB(255,255,255), CV_FILLED);
+    cv::putText(im, label, pt, fontface, scale,color, thickness, 8);
 }
 
 
