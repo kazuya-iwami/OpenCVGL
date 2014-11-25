@@ -70,7 +70,7 @@ int main (int argc, char **argv)
     
     cv::Mat input,processed;
     const char *input_file;
-    const char* preset_file = "/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/figures2.jpg";
+    const char* preset_file = "/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/figures3.jpg";
     
     if(argc==2){
         input_file=argv[1];
@@ -108,9 +108,10 @@ void detectLine(Mat &input,Mat &processed){
     
     cvtColor(input,canny_output,CV_BGR2GRAY);  //色空間の変換(グレイスケール化)
     blur(canny_output, canny_output, Size(5,5) );//平滑化して誤差を減らす
+    threshold(canny_output, canny_output, 115, 255, CV_THRESH_BINARY);//二値化
     Canny (canny_output, canny_output, 50,150, 3);//canny法によるエッジ検出
     
-//    //cvThreshold(img_gray, img_gray, 0, 255, CV_THRESH_BINARY);//二値化
+   
 //    
 //    findContours(canny_output, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0) );
 //
@@ -130,6 +131,7 @@ void detectLine(Mat &input,Mat &processed){
 //    
     
     // (5)検出結果表示用のウィンドウを確保し表示する
+    
     canny_output.copyTo(processed);
     
 
