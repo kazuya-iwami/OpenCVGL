@@ -26,10 +26,11 @@ using namespace std;
 #define APPROX_COEFFICIENT 0.013 //頂点認識の調整係数
 
 enum Vertex_Kind {
+    NONE_EDGE,
     A_EDGE,
     T_EDGE,
     Y_EDGE,
-    l_EDGE
+    L_EDGE
 };
 
 void detectLine(Mat &input,Mat &processed);
@@ -78,6 +79,7 @@ public:
 Vertex::Vertex(Point p,int t){
     point=p;
     num_of_sides=t;
+    kind=NONE_EDGE;
 //    attached_vertex[0]=a[0];
 //    if(num_of_sides==2||num_of_sides==3)attached_vertex[1]=a[1];
 //    if(num_of_sides==3)attached_vertex[2]=a[2];
@@ -321,10 +323,9 @@ void detectLine(Mat &input,Mat &processed){
     
     //各頂点のL,T字判別
     
-    for(int i=0;i<vertexes.size();i++){
-    //for(int i=0;i<3;i++){
-
-        if(vertexes[i].num_of_sides==2){//tmp_vertexesとvertexesは添字共有している
+    for(int i=0;i<vertexes.size();i++){//tmp_vertexesとvertexesは添字共有している
+        if(vertexes[i].num_of_sides==2){
+            
             int next_0,prev_0,next_1,prev_1;
             
             if(tmp_vertexes[i].l[0]==0){
@@ -342,50 +343,87 @@ void detectLine(Mat &input,Mat &processed){
             if(tmp_vertexes[i].l[1] == ((int)approx_contours[tmp_vertexes[i].k[1]].size() -1)  ){
                 next_1=0;
             }else next_1 = tmp_vertexes[i].l[1]+1;
+            
+            //まず同じ方向にある頂点の組を１つ見つける
+            int other_0,other_1;//同じ方向の頂点に属していない特徴点
+            //内積を求め、正なら同じ方向
+            if((approx_contours[tmp_vertexes[i].k[0]][next_0].point - vertexes[i].point)
+                .dot(approx_contours[tmp_vertexes[i].k[1]][next_1].point - vertexes[i].point)>0){
                 
-            //ある頂点に所属する特徴点の前後の特徴点のうち、同じ頂点に属しているものが二組あればL型
-            if((approx_contours[tmp_vertexes[i].k[0]][next_0].vertex_id==approx_contours[tmp_vertexes[i].k[1]][next_1].vertex_id &&
-               approx_contours[tmp_vertexes[i].k[0]][prev_0].vertex_id==approx_contours[tmp_vertexes[i].k[1]][prev_1].vertex_id) ||
-               (approx_contours[tmp_vertexes[i].k[0]][next_0].vertex_id==approx_contours[tmp_vertexes[i].k[1]][prev_1].vertex_id &&
-               approx_contours[tmp_vertexes[i].k[0]][prev_0].vertex_id==approx_contours[tmp_vertexes[i].k[1]][next_1].vertex_id)){
-                //Lの場合
-                vertexes[i].kind=l_EDGE;
+                if(norm(approx_contours[tmp_vertexes[i].k[0]][next_0].point - vertexes[i].point)//隣の頂点の値を取得
+                   < norm(approx_contours[tmp_vertexes[i].k[1]][next_1].point - vertexes[i].point)){
+                    vertexes[i].attached_vertex[1]=approx_contours[tmp_vertexes[i].k[0]][next_0].vertex_id;
+                }else vertexes[i].attached_vertex[1]=approx_contours[tmp_vertexes[i].k[0]][next_1].vertex_id;
+                
+                other_0=prev_0;
+                other_1=prev_1;
+            }else if((approx_contours[tmp_vertexes[i].k[0]][next_0].point - vertexes[i].point)
+                     .dot(approx_contours[tmp_vertexes[i].k[1]][prev_1].point - vertexes[i].point)>0){
+                
+                if(norm(approx_contours[tmp_vertexes[i].k[0]][next_0].point - vertexes[i].point)//隣の頂点の値を取得
+                   < norm(approx_contours[tmp_vertexes[i].k[1]][prev_1].point - vertexes[i].point)){
+                    vertexes[i].attached_vertex[1]=approx_contours[tmp_vertexes[i].k[0]][next_0].vertex_id;
+                }else vertexes[i].attached_vertex[1]=approx_contours[tmp_vertexes[i].k[0]][prev_1].vertex_id;
+                
+                other_0=prev_0;
+                other_1=next_1;
+            }else if((approx_contours[tmp_vertexes[i].k[0]][prev_0].point - vertexes[i].point)
+                     .dot(approx_contours[tmp_vertexes[i].k[1]][next_1].point - vertexes[i].point)>0){
+                
+                if(norm(approx_contours[tmp_vertexes[i].k[0]][prev_0].point - vertexes[i].point)//隣の頂点の値を取得
+                   < norm(approx_contours[tmp_vertexes[i].k[1]][next_1].point - vertexes[i].point)){
+                    vertexes[i].attached_vertex[1]=approx_contours[tmp_vertexes[i].k[0]][prev_0].vertex_id;
+                }else vertexes[i].attached_vertex[1]=approx_contours[tmp_vertexes[i].k[0]][next_1].vertex_id;
+                
+                other_0=next_0;
+                other_1=prev_1;
+            }else if((approx_contours[tmp_vertexes[i].k[0]][prev_0].point - vertexes[i].point)
+                     .dot(approx_contours[tmp_vertexes[i].k[1]][prev_1].point - vertexes[i].point)>0){
+                
+                if(norm(approx_contours[tmp_vertexes[i].k[0]][prev_0].point - vertexes[i].point)//隣の頂点の値を取得
+                   < norm(approx_contours[tmp_vertexes[i].k[1]][prev_1].point - vertexes[i].point)){
+                    vertexes[i].attached_vertex[1]=approx_contours[tmp_vertexes[i].k[0]][prev_0].vertex_id;
+                }else vertexes[i].attached_vertex[1]=approx_contours[tmp_vertexes[i].k[0]][prev_1].vertex_id;
+                
+                other_0=next_0;
+                other_1=next_1;
+            }
+            
+            
+            //ここで、other_0,1の頂点が同じ方向ならL型、逆方向ならT型と判断
+            //これでは正しく取得できない場合もあるので改善の余地あり
+            if((approx_contours[tmp_vertexes[i].k[0]][other_0].point - vertexes[i].point)
+               .dot(approx_contours[tmp_vertexes[i].k[1]][other_1].point - vertexes[i].point)>0){
+                //L型の場合
+                vertexes[i].kind=L_EDGE;
                 circle(drawing, vertexes[i].point,3,Scalar(0,0,0),2);
+
+                if(norm(approx_contours[tmp_vertexes[i].k[0]][other_0].point - vertexes[i].point)
+                   < norm(approx_contours[tmp_vertexes[i].k[1]][other_1].point - vertexes[i].point)){
+                    vertexes[i].attached_vertex[0]=approx_contours[tmp_vertexes[i].k[0]][other_0].vertex_id;
+                }else{
+                    vertexes[i].attached_vertex[0]=approx_contours[tmp_vertexes[i].k[0]][other_1].vertex_id;
+                }
+                
+                
             }else{
-                //同じ頂点に属していない特徴点をA,Bとし、∠AOBが180°ならT型０°ならL型と判断
-                int other_0,other_1;//同じ頂点に属していない特徴点
-                if(approx_contours[tmp_vertexes[i].k[0]][next_0].vertex_id==approx_contours[tmp_vertexes[i].k[1]][next_1].vertex_id){
-                    other_0=prev_0;
-                    other_1=prev_1;
-                }else if(approx_contours[tmp_vertexes[i].k[0]][next_0].vertex_id==approx_contours[tmp_vertexes[i].k[1]][prev_1].vertex_id){
-                    other_0=prev_0;
-                    other_1=next_1;
-                }else if(approx_contours[tmp_vertexes[i].k[0]][prev_0].vertex_id==approx_contours[tmp_vertexes[i].k[1]][next_1].vertex_id){
-                    other_0=next_0;
-                    other_1=prev_1;
-                }else if(approx_contours[tmp_vertexes[i].k[0]][prev_0].vertex_id==approx_contours[tmp_vertexes[i].k[1]][prev_1].vertex_id){
-                    other_0=next_0;
-                    other_1=next_1;
+                //T型の場合
+                vertexes[i].kind=T_EDGE;
+                vertexes[i].attached_vertex[0]=approx_contours[tmp_vertexes[i].k[0]][next_0].vertex_id;
+                vertexes[i].attached_vertex[0]=approx_contours[tmp_vertexes[i].k[0]][prev_0].vertex_id;
+                circle(drawing, vertexes[i].point,3,Scalar(0,200,0),2);
+                
+                if(norm(approx_contours[tmp_vertexes[i].k[0]][other_0].point - vertexes[i].point)
+                   < norm(approx_contours[tmp_vertexes[i].k[1]][other_1].point - vertexes[i].point)){
+                    vertexes[i].attached_vertex[0]=approx_contours[tmp_vertexes[i].k[0]][other_0].vertex_id;
                 }else{
-                    cout << "頂点の型判断エラー" <<endl;
+                    vertexes[i].attached_vertex[0]=approx_contours[tmp_vertexes[i].k[0]][other_1].vertex_id;
                 }
                 
-                //内積で判断
-                if((approx_contours[tmp_vertexes[i].k[0]][other_0].point - vertexes[i].point)
-                   .dot(approx_contours[tmp_vertexes[i].k[1]][other_1].point - vertexes[i].point)>0){
-                    //L型の場合
-                    vertexes[i].kind=l_EDGE;
-                    circle(drawing, vertexes[i].point,3,Scalar(0,0,0),2);
+            }
 
-                }else{
-                    //T型の場合
-                    vertexes[i].kind=T_EDGE;
-                    circle(drawing, vertexes[i].point,3,Scalar(0,200,0),2);
+               
 
-                }
-                
-                           }
-            //circle(drawing, vertexes[i].point,3,Scalar(200,0,0),2);
         }
     }
     
@@ -414,6 +452,8 @@ void setLabel(cv::Mat& im, const std::string label, std::vector<cv::Point>& cont
 //TODO 自前で類似線を合わせる処理つくる
 //実際の線の太さを想定して取得してみる
 //頂点データ保存
+
+//L字の取得が甘い　２頂点前後の計４点すべてが別頂点に入る可能性あり
 
 
 
