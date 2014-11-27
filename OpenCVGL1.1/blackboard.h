@@ -9,6 +9,11 @@
 #ifndef __OpenCVGL1_1__blackboard__
 #define __OpenCVGL1_1__blackboard__
 
-#include <stdio.h>
+
+
+
+
+
+
 
 #endif /* defined(__OpenCVGL1_1__blackboard__) */

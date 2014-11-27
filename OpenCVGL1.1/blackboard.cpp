@@ -8,6 +8,8 @@
 
 #include "blackboard.h"
 
+#include <stdio.h>
+
 #include <cv.hpp>
 #include <core.hpp>
 #include <highgui.hpp>
@@ -20,13 +22,78 @@
 using namespace cv;
 using namespace std;
 
+#define VERTEX_DISTANCE_COEFFICIENT 3.0//同一頂点とみなす距離の調整定数
+#define APPROX_COEFFICIENT 0.013 //頂点認識の調整係数
+
+enum Vertex_Kind {
+    A_EDGE,
+    T_EDGE,
+    Y_EDGE,
+    l_EDGE
+};
+
 void detectLine(Mat &input,Mat &processed);
 void setLabel(cv::Mat& im, const std::string label, std::vector<cv::Point>& contour,Scalar color);
+
+class TmpVertex {//０自身　1最短　２２番め
+public:
+    int num_of_sides;//3:３辺からなる　2:2辺からなる 1:エラー
+    double dst[3];
+    int k[3],l[3];
+    TmpVertex(int k,int l);
+};
+
+TmpVertex::TmpVertex(int k_,int l_) {
+    dst[0]=0.0;
+    dst[1]=dst[2]=10000.0;
+    k[0]=k_;
+    l[0]=l_;
+    num_of_sides=1;
+}
+
+class Contour {
+public:
+    Point point;
+    bool used;
+    int vertex_id;//所属している頂点の添字
+    Contour(Point p,bool u);
+    
+};
+
+
+Contour::Contour(Point p,bool u){
+    point=p;
+    used=u;
+    
+}
+
+class Vertex { //頂点クラス
+public:
+    Point point;
+    int num_of_sides;//辺の数
+    Vertex_Kind kind;
+    int attached_vertex[3];
+    Vertex(Point p,int t);
+};
+Vertex::Vertex(Point p,int t){
+    point=p;
+    num_of_sides=t;
+//    attached_vertex[0]=a[0];
+//    if(num_of_sides==2||num_of_sides==3)attached_vertex[1]=a[1];
+//    if(num_of_sides==3)attached_vertex[2]=a[2];
+}
+
+double distance(Point p1,Point p2){
+    double dst=sqrt(pow(p1.x-p2.x,2)+pow(p1.y-p2.y,2));
+    return dst;
+}
+
+
 
 int main (int argc, char **argv)
 {
     
-//    
+//    //動画からの読み込み
 //    // 1. prepare VideoCapture Object
 //    VideoCapture cap;
 //    Mat frame_cap,frame_pro;
@@ -68,10 +135,10 @@ int main (int argc, char **argv)
 //        }
 //    }
     
-    
+    //画像からの読み込み
     cv::Mat input,processed;
     const char *input_file;
-    const char* preset_file = "/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/figures3.jpg";
+    const char* preset_file = "/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/figures4.jpg";
     
     if(argc==2){
         input_file=argv[1];
@@ -106,45 +173,226 @@ void detectLine(Mat &input,Mat &processed){
     vector<vector<Point> > contours;
     vector<Vec4i> hierarchy;
     RNG rng(12345);
+    vector<vector<Contour>> approx_contours;//補正後の頂点
     
     cvtColor(input,canny_output,CV_BGR2GRAY);  //色空間の変換(グレイスケール化)
     blur(canny_output, canny_output, Size(3,3) );//平滑化して誤差を減らす
     threshold(canny_output, canny_output, 115, 255, CV_THRESH_BINARY);//二値化
     Canny (canny_output, canny_output, 50,150, 3);//canny法によるエッジ検出
     
-   
+    blur(canny_output, canny_output, Size(3,3) );//線が細い場合穴が空いて正しく物体認識出来ないのでこの２行入れる 線が細い場合危険
+    threshold(canny_output, canny_output, 15, 255, CV_THRESH_BINARY);
     
-    findContours(canny_output, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0) );
+    findContours(canny_output, contours, hierarchy, CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE, Point(0, 0) );
 
     Mat drawing = Mat::zeros( canny_output.size(), CV_8UC3 );
-    vector<cv::Point> approx;
-    for( int i = 0; i< contours.size(); i++ )
+    rectangle(drawing, Point(0,0), canny_output.size(), Scalar(255,255,255),CV_FILLED);
+    
+    for( int i = 0; i< contours.size(); i+=2 ) //何故かほぼ同じ領域が２つ連続していたので省く
     {
+
+        vector<cv::Point> approx;
+        
         //Ramer–Douglas–Peucker algorithmによる多角形近似
-        approxPolyDP(cv::Mat(contours[i]), approx, cv::arcLength(cv::Mat(contours[i]), true) * 0.013,true);
-        if (std::fabs(cv::contourArea(contours[i])) < 30 )//小さいobjectは排除
+        if (std::fabs(cv::contourArea(contours[i])) < 20 )//小さいobjectは排除
             continue;
+        approxPolyDP(cv::Mat(contours[i]), approx, cv::arcLength(cv::Mat(contours[i]), true) * APPROX_COEFFICIENT,true);
+        vector<Contour> tmp_approx;
+        for( int j= 0; j< approx.size(); j++ ){
+            Contour tmp(approx[j],false);
+            tmp_approx.push_back(tmp);
+            //cout << i << " "<<j<<endl;
+        }
+        approx_contours.push_back(tmp_approx);
+        
+//            for(int j=0; j<(int)contours[i].size(); j++){//特徴点の表示
+//                line(drawing, contours[i][j], contours[i][j], Scalar(200,250,250));
+//            }
         
         Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
         drawContours( drawing, contours, i, color, 1, 8, hierarchy, 0, Point() );
-        
-        //    for(int j=0; j<(int)contours[i].size(); j++){//特徴点の表示
-        //        line(drawing, contours[i][j], contours[i][j], Scalar(200,250,250));
-        //    }
-        
-        for(int k=0; k<(int)approx.size(); k++){//頂点の表示
-            circle(drawing, approx[k], 3,color,2);
-        }
-        
         setLabel(drawing, to_string(i), approx,color);
+        
+    }
+    
+    //VERTEX_DISTANCE決定
+    //各頂点間の最小距離の平均を元に、どの距離までを同一頂点とみなすか決める。
+    double ave_min_dst=0.0;
+    
+    for( int j = 0; j< approx_contours[0].size(); j++ ){
+        double min_dst=1000.0;
+        
+        for( int k = 1; k< approx_contours.size(); k++ ){
+            for( int l= 0; l< approx_contours[k].size(); l++ ){
+                double dst = distance(approx_contours[0][j].point,approx_contours[k][l].point);
+                if(min_dst > dst){
+                    min_dst=dst;
+                }
+            }
+        }
+        ave_min_dst+=min_dst;
+    }
+    ave_min_dst=ave_min_dst/approx_contours[0].size()*VERTEX_DISTANCE_COEFFICIENT;
+    cout << "ave_min_dst :"<<ave_min_dst<<endl;
+    
+    //頂点抽出
+    vector<TmpVertex> tmp_vertexes;//一時的な頂点保存クラス
+    vector<Vertex> vertexes;
+    
+    for( int i = 0; i< approx_contours.size(); i++ ){
+        //cout << "approx_contours[" << i << "]" << endl;
+        for( int j= 0; j< approx_contours[i].size(); j++ ){//ある頂点について
+            if(approx_contours[i][j].used==true)continue;//すでに頂点に決まっているものは無視
+            TmpVertex tmp(i,j);
+            
+            //cout << i <<" "<< j << endl;
+
+            //circle(drawing, approx_contours[7][1].point, 3,Scalar(0,0,0),2);
+            //circle(drawing, approx_contours[6][6].point, 3,Scalar(200,0,0),2);
+            //cout << approx_contours[i][j].point << endl;
+            for( int k = 1; k< approx_contours.size(); k++ ){
+                if(k==i)continue;
+                
+                double min_dst=1000.0;
+                int min_l=0;
+                
+                for( int l= 0; l< approx_contours[k].size(); l++ ){
+                    if(approx_contours[k][l].used==true)continue;
+                    double dst = distance(approx_contours[i][j].point,approx_contours[k][l].point);
+                    if(min_dst > dst){//ある領域内の最短点求める
+                        min_dst=dst;
+                        min_l=l;
+                    }
+                    
+                }
+                //同じ領域から２点取らないように
+                if(tmp.dst[1] > min_dst){//最短更新
+                    tmp.dst[2]=tmp.dst[1];
+                    tmp.k[2]=tmp.k[1];
+                    tmp.l[2]=tmp.l[1];
+                    tmp.dst[1] = min_dst;
+                    tmp.k[1]=k;
+                    tmp.l[1]=min_l;
+                    
+                }else if(tmp.dst[2] > min_dst){//二番目に近い点更新
+                    tmp.dst[2] = min_dst;
+                    tmp.k[2]=k;
+                    tmp.l[2]=min_l;
+                }
+
+            }
+            //頂点生成
+            if(tmp.dst[2] < ave_min_dst){//３辺からなる頂点
+                tmp.num_of_sides=3;
+                approx_contours[tmp.k[0]][tmp.l[0]].used=true;
+                approx_contours[tmp.k[1]][tmp.l[1]].used=true;
+                approx_contours[tmp.k[2]][tmp.l[2]].used=true;
+                approx_contours[tmp.k[0]][tmp.l[0]].vertex_id=(int)vertexes.size();
+                approx_contours[tmp.k[1]][tmp.l[1]].vertex_id=(int)vertexes.size();
+                approx_contours[tmp.k[2]][tmp.l[2]].vertex_id=(int)vertexes.size();
+                Vertex vertex((approx_contours[tmp.k[0]][tmp.l[0]].point
+                                    +approx_contours[tmp.k[1]][tmp.l[1]].point
+                                    +approx_contours[tmp.k[2]][tmp.l[2]].point)*(1.0/3.0),tmp.num_of_sides);
+                vertexes.push_back(vertex);
+                
+            }else if(tmp.dst[1] < ave_min_dst){//２辺からなる頂点
+                tmp.num_of_sides=2;
+                approx_contours[tmp.k[0]][tmp.l[0]].used=true;
+                approx_contours[tmp.k[1]][tmp.l[1]].used=true;
+                approx_contours[tmp.k[0]][tmp.l[0]].vertex_id=(int)vertexes.size();
+                approx_contours[tmp.k[1]][tmp.l[1]].vertex_id=(int)vertexes.size();
+                Vertex vertex((approx_contours[tmp.k[0]][tmp.l[0]].point
+                                    +approx_contours[tmp.k[1]][tmp.l[1]].point)*(1.0/2.0),tmp.num_of_sides);
+                vertexes.push_back(vertex);
+                //circle(drawing, approx_contours[tmp.k[0]][tmp.l[0]].point,3,Scalar(200,0,0),2);
+            }else{
+                //頂点取得失敗失敗！
+                cout << "頂点取得失敗!" << endl;
+                tmp.num_of_sides=1;
+                Vertex vertex(Point(0,0),tmp.num_of_sides);
+                vertexes.push_back(vertex);
+            }
+            tmp_vertexes.push_back(tmp);
+
+        }
     }
 
+    //頂点分類
     
-    // (5)検出結果表示用のウィンドウを確保し表示する
+    //各頂点のL,T字判別
     
-    drawing.copyTo(processed);
-    
+    for(int i=0;i<vertexes.size();i++){
+    //for(int i=0;i<3;i++){
 
+        if(vertexes[i].num_of_sides==2){//tmp_vertexesとvertexesは添字共有している
+            int next_0,prev_0,next_1,prev_1;
+            
+            if(tmp_vertexes[i].l[0]==0){
+                prev_0=(int)approx_contours[tmp_vertexes[i].k[0]].size() - 1;
+            }else prev_0 = tmp_vertexes[i].l[0]-1;
+            
+            if(tmp_vertexes[i].l[0] == ((int)approx_contours[tmp_vertexes[i].k[0]].size() -1)  ){
+                next_0=0;
+            }else next_0 = tmp_vertexes[i].l[0]+1;
+            
+            if(tmp_vertexes[i].l[1]==0){
+                prev_1=(int)approx_contours[tmp_vertexes[i].k[1]].size() - 1;
+            }else prev_1 = tmp_vertexes[i].l[1]-1;
+            
+            if(tmp_vertexes[i].l[1] == ((int)approx_contours[tmp_vertexes[i].k[1]].size() -1)  ){
+                next_1=0;
+            }else next_1 = tmp_vertexes[i].l[1]+1;
+                
+            //ある頂点に所属する特徴点の前後の特徴点のうち、同じ頂点に属しているものが二組あればL型
+            if((approx_contours[tmp_vertexes[i].k[0]][next_0].vertex_id==approx_contours[tmp_vertexes[i].k[1]][next_1].vertex_id &&
+               approx_contours[tmp_vertexes[i].k[0]][prev_0].vertex_id==approx_contours[tmp_vertexes[i].k[1]][prev_1].vertex_id) ||
+               (approx_contours[tmp_vertexes[i].k[0]][next_0].vertex_id==approx_contours[tmp_vertexes[i].k[1]][prev_1].vertex_id &&
+               approx_contours[tmp_vertexes[i].k[0]][prev_0].vertex_id==approx_contours[tmp_vertexes[i].k[1]][next_1].vertex_id)){
+                //Lの場合
+                vertexes[i].kind=l_EDGE;
+                circle(drawing, vertexes[i].point,3,Scalar(0,0,0),2);
+            }else{
+                //同じ頂点に属していない特徴点をA,Bとし、∠AOBが180°ならT型０°ならL型と判断
+                int other_0,other_1;//同じ頂点に属していない特徴点
+                if(approx_contours[tmp_vertexes[i].k[0]][next_0].vertex_id==approx_contours[tmp_vertexes[i].k[1]][next_1].vertex_id){
+                    other_0=prev_0;
+                    other_1=prev_1;
+                }else if(approx_contours[tmp_vertexes[i].k[0]][next_0].vertex_id==approx_contours[tmp_vertexes[i].k[1]][prev_1].vertex_id){
+                    other_0=prev_0;
+                    other_1=next_1;
+                }else if(approx_contours[tmp_vertexes[i].k[0]][prev_0].vertex_id==approx_contours[tmp_vertexes[i].k[1]][next_1].vertex_id){
+                    other_0=next_0;
+                    other_1=prev_1;
+                }else if(approx_contours[tmp_vertexes[i].k[0]][prev_0].vertex_id==approx_contours[tmp_vertexes[i].k[1]][prev_1].vertex_id){
+                    other_0=next_0;
+                    other_1=next_1;
+                }else{
+                    cout << "頂点の型判断エラー" <<endl;
+                }
+                
+                //内積で判断
+                if((approx_contours[tmp_vertexes[i].k[0]][other_0].point - vertexes[i].point)
+                   .dot(approx_contours[tmp_vertexes[i].k[1]][other_1].point - vertexes[i].point)>0){
+                    //L型の場合
+                    vertexes[i].kind=l_EDGE;
+                    circle(drawing, vertexes[i].point,3,Scalar(0,0,0),2);
+
+                }else{
+                    //T型の場合
+                    vertexes[i].kind=T_EDGE;
+                    circle(drawing, vertexes[i].point,3,Scalar(0,200,0),2);
+
+                }
+                
+                           }
+            //circle(drawing, vertexes[i].point,3,Scalar(200,0,0),2);
+        }
+    }
+    
+    
+                              
+                              
+    drawing.copyTo(processed);
     
 }
 
@@ -159,11 +407,13 @@ void setLabel(cv::Mat& im, const std::string label, std::vector<cv::Point>& cont
     cv::Rect r = cv::boundingRect(contour);
     
     cv::Point pt(r.x + ((r.width - text.width) / 2), r.y + ((r.height + text.height) / 2));
-    cv::rectangle(im, pt + cv::Point(0, baseline), pt + cv::Point(text.width, -text.height), CV_RGB(255,255,255), CV_FILLED);
+    //cv::rectangle(im, pt + cv::Point(0, baseline), pt + cv::Point(text.width, -text.height), CV_RGB(255,255,255), CV_FILLED);
     cv::putText(im, label, pt, fontface, scale,color, thickness, 8);
 }
 
-
+//TODO 自前で類似線を合わせる処理つくる
+//実際の線の太さを想定して取得してみる
+//頂点データ保存
 
 
 
