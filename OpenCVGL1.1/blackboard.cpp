@@ -353,7 +353,7 @@ void detectLine(Mat &input,Mat &processed){
                 if(norm(approx_contours[tmp_vertexes[i].k[0]][next_0].point - vertexes[i].point)//隣の頂点の値を取得
                    < norm(approx_contours[tmp_vertexes[i].k[1]][next_1].point - vertexes[i].point)){
                     vertexes[i].attached_vertex[1]=approx_contours[tmp_vertexes[i].k[0]][next_0].vertex_id;
-                }else vertexes[i].attached_vertex[1]=approx_contours[tmp_vertexes[i].k[0]][next_1].vertex_id;
+                }else vertexes[i].attached_vertex[1]=approx_contours[tmp_vertexes[i].k[1]][next_1].vertex_id;
                 
                 other_0=prev_0;
                 other_1=prev_1;
@@ -363,7 +363,7 @@ void detectLine(Mat &input,Mat &processed){
                 if(norm(approx_contours[tmp_vertexes[i].k[0]][next_0].point - vertexes[i].point)//隣の頂点の値を取得
                    < norm(approx_contours[tmp_vertexes[i].k[1]][prev_1].point - vertexes[i].point)){
                     vertexes[i].attached_vertex[1]=approx_contours[tmp_vertexes[i].k[0]][next_0].vertex_id;
-                }else vertexes[i].attached_vertex[1]=approx_contours[tmp_vertexes[i].k[0]][prev_1].vertex_id;
+                }else vertexes[i].attached_vertex[1]=approx_contours[tmp_vertexes[i].k[1]][prev_1].vertex_id;
                 
                 other_0=prev_0;
                 other_1=next_1;
@@ -373,7 +373,7 @@ void detectLine(Mat &input,Mat &processed){
                 if(norm(approx_contours[tmp_vertexes[i].k[0]][prev_0].point - vertexes[i].point)//隣の頂点の値を取得
                    < norm(approx_contours[tmp_vertexes[i].k[1]][next_1].point - vertexes[i].point)){
                     vertexes[i].attached_vertex[1]=approx_contours[tmp_vertexes[i].k[0]][prev_0].vertex_id;
-                }else vertexes[i].attached_vertex[1]=approx_contours[tmp_vertexes[i].k[0]][next_1].vertex_id;
+                }else vertexes[i].attached_vertex[1]=approx_contours[tmp_vertexes[i].k[1]][next_1].vertex_id;
                 
                 other_0=next_0;
                 other_1=prev_1;
@@ -383,7 +383,7 @@ void detectLine(Mat &input,Mat &processed){
                 if(norm(approx_contours[tmp_vertexes[i].k[0]][prev_0].point - vertexes[i].point)//隣の頂点の値を取得
                    < norm(approx_contours[tmp_vertexes[i].k[1]][prev_1].point - vertexes[i].point)){
                     vertexes[i].attached_vertex[1]=approx_contours[tmp_vertexes[i].k[0]][prev_0].vertex_id;
-                }else vertexes[i].attached_vertex[1]=approx_contours[tmp_vertexes[i].k[0]][prev_1].vertex_id;
+                }else vertexes[i].attached_vertex[1]=approx_contours[tmp_vertexes[i].k[1]][prev_1].vertex_id;
                 
                 other_0=next_0;
                 other_1=next_1;
@@ -402,7 +402,7 @@ void detectLine(Mat &input,Mat &processed){
                    < norm(approx_contours[tmp_vertexes[i].k[1]][other_1].point - vertexes[i].point)){
                     vertexes[i].attached_vertex[0]=approx_contours[tmp_vertexes[i].k[0]][other_0].vertex_id;
                 }else{
-                    vertexes[i].attached_vertex[0]=approx_contours[tmp_vertexes[i].k[0]][other_1].vertex_id;
+                    vertexes[i].attached_vertex[0]=approx_contours[tmp_vertexes[i].k[1]][other_1].vertex_id;
                 }
                 
                 
@@ -417,19 +417,57 @@ void detectLine(Mat &input,Mat &processed){
                    < norm(approx_contours[tmp_vertexes[i].k[1]][other_1].point - vertexes[i].point)){
                     vertexes[i].attached_vertex[0]=approx_contours[tmp_vertexes[i].k[0]][other_0].vertex_id;
                 }else{
-                    vertexes[i].attached_vertex[0]=approx_contours[tmp_vertexes[i].k[0]][other_1].vertex_id;
+                    vertexes[i].attached_vertex[0]=approx_contours[tmp_vertexes[i].k[1]][other_1].vertex_id;
                 }
                 
             }
+            
+            
+            //
 
                
 
-        }
+        }//2頂点の場合終了
+        
+        if(vertexes[i].num_of_sides==3){
+            int tmp_l[3][2];
+            int pair_l[3][2];
+            int pair_l_counter=0;
+
+            for(int j=0;j<3;j++){ //頂点を構成する特徴点の前後にある特徴点を取得
+                if(tmp_vertexes[i].l[j]==0){
+                    tmp_l[j][0]=(int)approx_contours[tmp_vertexes[i].k[j]].size() - 1;
+                }else tmp_l[j][0] = tmp_vertexes[i].l[j]-1;
+                
+                if(tmp_vertexes[i].l[j] == ((int)approx_contours[tmp_vertexes[i].k[j]].size() -1)  ){
+                    tmp_l[j][1]=0;
+                }else tmp_l[j][1] = tmp_vertexes[i].l[j]+1;
+                
+            }
+            
+            for(int n=0;n<3;n++){
+                for (int m=n+1; m<3; m++) {
+                    for(int p=0;p<2;p++){
+                        for(int q=0; q<2;q++){
+                            if((approx_contours[tmp_vertexes[i].k[n]][tmp_l[n][p]].point - vertexes[i].point)
+                               .dot(approx_contours[tmp_vertexes[i].k[m]][tmp_l[m][q]].point - vertexes[i].point)/
+                               norm(approx_contours[tmp_vertexes[i].k[n]][tmp_l[n][p]].point - vertexes[i].point)/
+                               norm(approx_contours[tmp_vertexes[i].k[m]][tmp_l[m][q]].point - vertexes[i].point) > 0.93969){//cos(20°)
+                                pair_l[pair_l_counter][0]=
+                                pair_l_counter++;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            
+            
+            
+        }//３頂点の場合終了
     }
     
     
-                              
-                              
     drawing.copyTo(processed);
     
 }
