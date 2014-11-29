@@ -159,6 +159,9 @@ Vertex::Vertex(Point p,int t){
 
 
 
+
+
+
 //関数定義
 
 
@@ -166,7 +169,10 @@ Vertex::Vertex(Point p,int t){
 void detecteVertex(Mat &input,vector<Vertex> &vertexes,vector<Edge> &edges);
 void setLabel(cv::Mat& im, const std::string label, std::vector<cv::Point>& contour,Scalar color);
 bool edgeExists(vector<Edge> edges,int v1,int e1, int v2, int e2);
-
+void genEdgeLabel(vector<Vertex> &vertex, vector<Edge> &edge_list);
+Edge_Kind getEdgeKind(Vertex_Kind kind, int edge_n);
+void calcEdge(vector<Vertex> vertexes, Edge edge);
+bool checkLocateRight(Point p1,Point p2);
 
 double distance(Point p1,Point p2){
     double dst=sqrt(pow(p1.x-p2.x,2)+pow(p1.y-p2.y,2));
@@ -447,8 +453,8 @@ void detecteVertex(Mat &input,vector<Vertex> &vertexes,vector<Edge> &edges){
                 
                 if(norm(approx_contours[tmp_vertexes[i].k[0]][next_0].point - vertexes[i].point)//隣の頂点の値を取得
                    < norm(approx_contours[tmp_vertexes[i].k[1]][next_1].point - vertexes[i].point)){
-                    vertexes[i].attached_vertex[1]=approx_contours[tmp_vertexes[i].k[0]][next_0].vertex_id;
-                }else vertexes[i].attached_vertex[1]=approx_contours[tmp_vertexes[i].k[1]][next_1].vertex_id;
+                    vertexes[i].attached_vertex[2]=approx_contours[tmp_vertexes[i].k[0]][next_0].vertex_id;
+                }else vertexes[i].attached_vertex[2]=approx_contours[tmp_vertexes[i].k[1]][next_1].vertex_id;
                 
                 other_0=prev_0;
                 other_1=prev_1;
@@ -457,8 +463,8 @@ void detecteVertex(Mat &input,vector<Vertex> &vertexes,vector<Edge> &edges){
                 
                 if(norm(approx_contours[tmp_vertexes[i].k[0]][next_0].point - vertexes[i].point)//隣の頂点の値を取得
                    < norm(approx_contours[tmp_vertexes[i].k[1]][prev_1].point - vertexes[i].point)){
-                    vertexes[i].attached_vertex[1]=approx_contours[tmp_vertexes[i].k[0]][next_0].vertex_id;
-                }else vertexes[i].attached_vertex[1]=approx_contours[tmp_vertexes[i].k[1]][prev_1].vertex_id;
+                    vertexes[i].attached_vertex[2]=approx_contours[tmp_vertexes[i].k[0]][next_0].vertex_id;
+                }else vertexes[i].attached_vertex[2]=approx_contours[tmp_vertexes[i].k[1]][prev_1].vertex_id;
                 
                 other_0=prev_0;
                 other_1=next_1;
@@ -467,8 +473,8 @@ void detecteVertex(Mat &input,vector<Vertex> &vertexes,vector<Edge> &edges){
                 
                 if(norm(approx_contours[tmp_vertexes[i].k[0]][prev_0].point - vertexes[i].point)//隣り合う頂点の登録
                    < norm(approx_contours[tmp_vertexes[i].k[1]][next_1].point - vertexes[i].point)){
-                    vertexes[i].attached_vertex[1]=approx_contours[tmp_vertexes[i].k[0]][prev_0].vertex_id;
-                }else vertexes[i].attached_vertex[1]=approx_contours[tmp_vertexes[i].k[1]][next_1].vertex_id;
+                    vertexes[i].attached_vertex[2]=approx_contours[tmp_vertexes[i].k[0]][prev_0].vertex_id;
+                }else vertexes[i].attached_vertex[2]=approx_contours[tmp_vertexes[i].k[1]][next_1].vertex_id;
                 
                 other_0=next_0;
                 other_1=prev_1;
@@ -477,8 +483,8 @@ void detecteVertex(Mat &input,vector<Vertex> &vertexes,vector<Edge> &edges){
                 
                 if(norm(approx_contours[tmp_vertexes[i].k[0]][prev_0].point - vertexes[i].point)//隣り合う頂点の登録
                    < norm(approx_contours[tmp_vertexes[i].k[1]][prev_1].point - vertexes[i].point)){
-                    vertexes[i].attached_vertex[1]=approx_contours[tmp_vertexes[i].k[0]][prev_0].vertex_id;
-                }else vertexes[i].attached_vertex[1]=approx_contours[tmp_vertexes[i].k[1]][prev_1].vertex_id;
+                    vertexes[i].attached_vertex[2]=approx_contours[tmp_vertexes[i].k[0]][prev_0].vertex_id;
+                }else vertexes[i].attached_vertex[2]=approx_contours[tmp_vertexes[i].k[1]][prev_1].vertex_id;
                 
                 other_0=next_0;
                 other_1=next_1;
@@ -500,6 +506,8 @@ void detecteVertex(Mat &input,vector<Vertex> &vertexes,vector<Edge> &edges){
                 vertexes[i].existing_kind_list.push_back(Vertex_Kind(KIND_L6));
                 
                 circle(input, vertexes[i].point,3,Scalar(200,200,200),2);
+                
+                vertexes[i].attached_vertex[1] = vertexes[i].attached_vertex[2];//仕様上こうなってます
 
                 if(norm(approx_contours[tmp_vertexes[i].k[0]][other_0].point - vertexes[i].point)//隣り合う頂点の登録
                    < norm(approx_contours[tmp_vertexes[i].k[1]][other_1].point - vertexes[i].point)){
@@ -508,6 +516,14 @@ void detecteVertex(Mat &input,vector<Vertex> &vertexes,vector<Edge> &edges){
                     vertexes[i].attached_vertex[0]=approx_contours[tmp_vertexes[i].k[1]][other_1].vertex_id;
                 }
                 
+                //並び替え
+                if(checkLocateRight(vertexes[vertexes[i].attached_vertex[1]].point - vertexes[i].point,
+                                    vertexes[vertexes[i].attached_vertex[0]].point - vertexes[i].point)){
+                    int tmp_a0 = vertexes[i].attached_vertex[0];
+                    vertexes[i].attached_vertex[0] = vertexes[i].attached_vertex[1];
+                    vertexes[i].attached_vertex[1] =tmp_a0;
+                    
+                }
                 
                 
                 
@@ -524,13 +540,14 @@ void detecteVertex(Mat &input,vector<Vertex> &vertexes,vector<Edge> &edges){
                 vertexes[i].attached_vertex[2]=approx_contours[tmp_vertexes[i].k[1]][other_1].vertex_id;
                 circle(input, vertexes[i].point,3,Scalar(0,200,0),2);
                 
-//                if(norm(approx_contours[tmp_vertexes[i].k[0]][other_0].point - vertexes[i].point)
-//                   < norm(approx_contours[tmp_vertexes[i].k[1]][other_1].point - vertexes[i].point)){
-//                    vertexes[i].attached_vertex[0]=approx_contours[tmp_vertexes[i].k[0]][other_0].vertex_id;
-//                }else{
-//                    vertexes[i].attached_vertex[0]=approx_contours[tmp_vertexes[i].k[1]][other_1].vertex_id;
-//                }
-                
+                //並び替え
+                if(checkLocateRight(vertexes[vertexes[i].attached_vertex[2]].point - vertexes[i].point,
+                                    vertexes[vertexes[i].attached_vertex[1]].point - vertexes[i].point)){
+                    int tmp_a0 = vertexes[i].attached_vertex[0];
+                    vertexes[i].attached_vertex[0] = vertexes[i].attached_vertex[1];
+                    vertexes[i].attached_vertex[1] =tmp_a0;
+
+                }
             }
             
             
@@ -578,7 +595,6 @@ void detecteVertex(Mat &input,vector<Vertex> &vertexes,vector<Edge> &edges){
                                 if(tmp_counter==3){//３頂点見つけたはずなので角度取得
                                     flag=1;
                                     double angle1,angle2,angle3=0.0;
-                                    double tmp_angle;
                                     angle1=acos(tmp_vector[0].dot(tmp_vector[1])/norm(tmp_vector[0])/norm(tmp_vector[1]));
                                     angle2=acos(tmp_vector[0].dot(tmp_vector[2])/norm(tmp_vector[0])/norm(tmp_vector[2]));
                                     angle3=acos(tmp_vector[1].dot(tmp_vector[2])/norm(tmp_vector[1])/norm(tmp_vector[2]));
@@ -593,15 +609,38 @@ void detecteVertex(Mat &input,vector<Vertex> &vertexes,vector<Edge> &edges){
                                         vertexes[i].existing_kind_list.push_back(Vertex_Kind(KIND_A3));
                                         
                                         circle(input, vertexes[i].point,3,Scalar(0,200,200),2);
-                                        // vertexes[i].attached_vertex[1]が中央の接点になるように接点並び替え
+                                        // vertexes[i].attached_vertex[2]が中央の接点になるように接点並び替え
+                                        int tmp_a0=vertexes[i].attached_vertex[0];
+                                        int tmp_a1=vertexes[i].attached_vertex[1];
+                                        int tmp_a2=vertexes[i].attached_vertex[2];
+                                        
+                                        
                                         if(angle1>angle2+angle3-0.174533){
-                                            tmp_angle = vertexes[i].attached_vertex[1];
-                                            vertexes[i].attached_vertex[1] = vertexes[i].attached_vertex[2];
-                                            vertexes[i].attached_vertex[2] = tmp_angle;
+                                            if(checkLocateRight(tmp_vector[0], tmp_vector[1])){
+                                                vertexes[i].attached_vertex[0]=tmp_a1;
+                                                vertexes[i].attached_vertex[1]=tmp_a0;
+                                                
+                                            }
                                         }else if(angle3>angle2+angle1-0.174533){
-                                            tmp_angle = vertexes[i].attached_vertex[1];
-                                            vertexes[i].attached_vertex[1] = vertexes[i].attached_vertex[0];
-                                            vertexes[i].attached_vertex[0] = tmp_angle;
+                                            if(checkLocateRight(tmp_vector[1], tmp_vector[2])){
+                                                vertexes[i].attached_vertex[0]=tmp_a2;
+                                                vertexes[i].attached_vertex[2]=tmp_a0;
+                                                
+                                            }else{
+                                                vertexes[i].attached_vertex[0]=tmp_a1;
+                                                vertexes[i].attached_vertex[1]=tmp_a2;
+                                                vertexes[i].attached_vertex[2]=tmp_a0;
+                                            }
+                                        }else{
+                                            if(checkLocateRight(tmp_vector[0], tmp_vector[2])){
+                                                vertexes[i].attached_vertex[0]=tmp_a2;
+                                                vertexes[i].attached_vertex[1]=tmp_a0;
+                                                vertexes[i].attached_vertex[2]=tmp_a1;
+                                                
+                                            }else{
+                                                vertexes[i].attached_vertex[1]=tmp_a2;
+                                                vertexes[i].attached_vertex[2]=tmp_a1;
+                                            }
                                         }
                                         
                                         //circle(drawing, vertexes[2].point,3,Scalar(0,200,200),2);
@@ -618,6 +657,16 @@ void detecteVertex(Mat &input,vector<Vertex> &vertexes,vector<Edge> &edges){
                                         vertexes[i].existing_kind_list.push_back(Vertex_Kind(KIND_Y5));
                                         
                                         circle(input, vertexes[i].point,3,Scalar(150,100,150),2);
+                                        
+                                        //並び替え
+                                        if(checkLocateRight(vertexes[vertexes[i].attached_vertex[0]].point - vertexes[i].point,
+                                                            vertexes[vertexes[i].attached_vertex[2]].point - vertexes[i].point)){
+                                            int tmp_a1 = vertexes[i].attached_vertex[1];
+                                            vertexes[i].attached_vertex[1] = vertexes[i].attached_vertex[2];
+                                            vertexes[i].attached_vertex[2] =tmp_a1;
+                                            
+                                        }
+
 
                                     }
                                 }
@@ -689,6 +738,13 @@ void detecteVertex(Mat &input,vector<Vertex> &vertexes,vector<Edge> &edges){
     
 }
 
+bool checkLocateRight(Point p1,Point p2){ // P1→P2について　trueなら右にfalseなら左にある。
+    if((p1.x * p2.y - p1.y * p2.x) < 0){
+        return  true;
+    }else return false;
+}
+
+
 //その辺が既に登録されているか
 bool edgeExists(vector<Edge> edges,int v1,int e1, int v2, int e2){    for(int i=0;i<edges.size();i++){
         if(edges[i].vertex_number1==v1 && edges[i].edge_number1 == e1 && edges[i].vertex_number2==v2 && edges[i].edge_number2 == e2){
@@ -721,7 +777,7 @@ void setLabel(cv::Mat& im, const std::string label, std::vector<cv::Point>& cont
 
 
 //線画のラベリング関数
-void genEdgeLabel(vector<Vertex> vertex, vector<Edge> edge_list){
+void genEdgeLabel(vector<Vertex> &vertex, vector<Edge> &edge_list){
     
     
     
@@ -730,7 +786,17 @@ void genEdgeLabel(vector<Vertex> vertex, vector<Edge> edge_list){
 }
 
 
+Edge_Kind getEdgeKind(Vertex_Kind kind, int edge_n){
+    if(kind==KIND_A1 && edge_n == 0)return KIND_MINUS;
+    if(kind==KIND_A1 && edge_n == 0)return KIND_MINUS;
+    if(kind==KIND_A1 && edge_n == 0)return KIND_MINUS;
+    if(kind==KIND_A1 && edge_n == 0)return KIND_MINUS;
 
+}
+
+void calcEdge(vector<Vertex> vertexes,Edge edge){
+    
+}
 
 
 
