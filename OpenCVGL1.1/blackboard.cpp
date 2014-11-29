@@ -636,9 +636,9 @@ void detecteVertex(Mat &input,vector<Vertex> &vertexes,vector<Edge> &edges){
     
     //edge_listの生成
     for(int i=0;i<vertexes.size();i++){
-        if(vertexes[i].num_of_sides==2){
+        if(vertexes[i].type == L_EDGE){
             for(int edge_n1=0; edge_n1<2; edge_n1++){
-                if(vertexes[vertexes[i].attached_vertex[edge_n1]].num_of_sides==2){
+                if(vertexes[vertexes[i].attached_vertex[edge_n1]].type == L_EDGE){
                     for(int edge_n2=0;edge_n2<2;edge_n2++){
                         if(i == vertexes[vertexes[i].attached_vertex[edge_n1]].attached_vertex[edge_n2]){//対応する２頂点検出
                             if(edgeExists(edges, i, edge_n1, vertexes[i].attached_vertex[edge_n1], edge_n2) == false){//まだその辺が登録されていなかったら
@@ -646,8 +646,8 @@ void detecteVertex(Mat &input,vector<Vertex> &vertexes,vector<Edge> &edges){
                             }
                         }
                     }
-                }else if(vertexes[vertexes[i].attached_vertex[edge_n1]].num_of_sides==2){
-                    for(int edge_n2=0;edge_n2<2;edge_n2++){
+                }else {
+                    for(int edge_n2=0;edge_n2<3;edge_n2++){
                         if(i == vertexes[vertexes[i].attached_vertex[edge_n1]].attached_vertex[edge_n2]){//対応する２頂点検出
                             if(edgeExists(edges, i, edge_n1, vertexes[i].attached_vertex[edge_n1], edge_n2) == false){//まだその辺が登録されていなかったら
                                 edges.push_back(Edge( i, edge_n1, vertexes[i].attached_vertex[edge_n1], edge_n2));
@@ -657,9 +657,9 @@ void detecteVertex(Mat &input,vector<Vertex> &vertexes,vector<Edge> &edges){
                 }
                 
             }
-        }else if(vertexes[i].num_of_sides==3){
+        }else {
             for(int edge_n1=0; edge_n1<3; edge_n1++){
-                if(vertexes[vertexes[i].attached_vertex[edge_n1]].num_of_sides==2){
+                if(vertexes[vertexes[i].attached_vertex[edge_n1]].type == L_EDGE){
                     for(int edge_n2=0;edge_n2<2;edge_n2++){
                         if(i == vertexes[vertexes[i].attached_vertex[edge_n1]].attached_vertex[edge_n2]){//対応する２頂点検出
                             if(edgeExists(edges, i, edge_n1, vertexes[i].attached_vertex[edge_n1], edge_n2) == false){//まだその辺が登録されていなかったら
@@ -667,8 +667,8 @@ void detecteVertex(Mat &input,vector<Vertex> &vertexes,vector<Edge> &edges){
                             }
                         }
                     }
-                }else if(vertexes[vertexes[i].attached_vertex[edge_n1]].num_of_sides==2){
-                    for(int edge_n2=0;edge_n2<2;edge_n2++){
+                }else {
+                    for(int edge_n2=0;edge_n2<3;edge_n2++){
                         if(i == vertexes[vertexes[i].attached_vertex[edge_n1]].attached_vertex[edge_n2]){//対応する２頂点検出
                             if(edgeExists(edges, i, edge_n1, vertexes[i].attached_vertex[edge_n1], edge_n2) == false){//まだその辺が登録されていなかったら
                                 edges.push_back(Edge( i, edge_n1, vertexes[i].attached_vertex[edge_n1], edge_n2));
