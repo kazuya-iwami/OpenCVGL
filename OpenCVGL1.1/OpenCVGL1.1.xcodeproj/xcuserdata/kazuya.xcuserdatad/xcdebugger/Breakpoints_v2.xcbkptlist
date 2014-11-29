@@ -10,11 +10,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "blackboard.cpp"
-            timestampString = "438967410.666722"
+            timestampString = "438981921.989811"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "620"
-            endingLineNumber = "620"
+            startingLineNumber = "662"
+            endingLineNumber = "662"
             landmarkName = "detecteVertex(Mat &amp;input,vector&lt;Vertex&gt; &amp;vertexes,vector&lt;Edge&gt; &amp;edges)"
             landmarkType = "7">
          </BreakpointContent>
@@ -26,11 +26,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "blackboard.cpp"
-            timestampString = "438967410.666722"
+            timestampString = "438983165.896391"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "688"
-            endingLineNumber = "688"
+            startingLineNumber = "741"
+            endingLineNumber = "741"
             landmarkName = "detecteVertex(Mat &amp;input,vector&lt;Vertex&gt; &amp;vertexes,vector&lt;Edge&gt; &amp;edges)"
             landmarkType = "7">
             <Locations>
@@ -268,11 +268,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "blackboard.cpp"
-            timestampString = "438967410.666722"
+            timestampString = "438981921.989811"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "681"
-            endingLineNumber = "681"
+            startingLineNumber = "732"
+            endingLineNumber = "732"
             landmarkName = "detecteVertex(Mat &amp;input,vector&lt;Vertex&gt; &amp;vertexes,vector&lt;Edge&gt; &amp;edges)"
             landmarkType = "7">
          </BreakpointContent>
@@ -284,11 +284,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "blackboard.cpp"
-            timestampString = "438967410.666722"
+            timestampString = "438983165.896391"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "683"
-            endingLineNumber = "683"
+            startingLineNumber = "736"
+            endingLineNumber = "736"
             landmarkName = "detecteVertex(Mat &amp;input,vector&lt;Vertex&gt; &amp;vertexes,vector&lt;Edge&gt; &amp;edges)"
             landmarkType = "7">
          </BreakpointContent>
@@ -300,11 +300,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "blackboard.cpp"
-            timestampString = "438967410.666722"
+            timestampString = "438981921.989811"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "674"
-            endingLineNumber = "674"
+            startingLineNumber = "725"
+            endingLineNumber = "725"
             landmarkName = "detecteVertex(Mat &amp;input,vector&lt;Vertex&gt; &amp;vertexes,vector&lt;Edge&gt; &amp;edges)"
             landmarkType = "7">
          </BreakpointContent>
@@ -316,11 +316,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "blackboard.cpp"
-            timestampString = "438967410.666722"
+            timestampString = "438981921.989811"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "660"
-            endingLineNumber = "660"
+            startingLineNumber = "711"
+            endingLineNumber = "711"
             landmarkName = "detecteVertex(Mat &amp;input,vector&lt;Vertex&gt; &amp;vertexes,vector&lt;Edge&gt; &amp;edges)"
             landmarkType = "7">
             <Locations>
@@ -362,11 +362,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "blackboard.cpp"
-            timestampString = "438967410.666722"
+            timestampString = "438981921.989811"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "643"
-            endingLineNumber = "643"
+            startingLineNumber = "694"
+            endingLineNumber = "694"
             landmarkName = "detecteVertex(Mat &amp;input,vector&lt;Vertex&gt; &amp;vertexes,vector&lt;Edge&gt; &amp;edges)"
             landmarkType = "7">
          </BreakpointContent>
@@ -378,11 +378,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "blackboard.cpp"
-            timestampString = "438967410.666722"
+            timestampString = "438981921.989811"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "651"
-            endingLineNumber = "651"
+            startingLineNumber = "702"
+            endingLineNumber = "702"
             landmarkName = "detecteVertex(Mat &amp;input,vector&lt;Vertex&gt; &amp;vertexes,vector&lt;Edge&gt; &amp;edges)"
             landmarkType = "7">
          </BreakpointContent>
@@ -394,11 +394,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "blackboard.cpp"
-            timestampString = "438967410.666722"
+            timestampString = "438981921.989811"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "663"
-            endingLineNumber = "663"
+            startingLineNumber = "714"
+            endingLineNumber = "714"
             landmarkName = "detecteVertex(Mat &amp;input,vector&lt;Vertex&gt; &amp;vertexes,vector&lt;Edge&gt; &amp;edges)"
             landmarkType = "7">
          </BreakpointContent>
@@ -410,11 +410,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "blackboard.cpp"
-            timestampString = "438967410.666722"
+            timestampString = "438981921.989811"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "666"
-            endingLineNumber = "666"
+            startingLineNumber = "717"
+            endingLineNumber = "717"
             landmarkName = "detecteVertex(Mat &amp;input,vector&lt;Vertex&gt; &amp;vertexes,vector&lt;Edge&gt; &amp;edges)"
             landmarkType = "7">
          </BreakpointContent>
@@ -426,11 +426,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "blackboard.cpp"
-            timestampString = "438967410.666722"
+            timestampString = "438981921.989811"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "616"
-            endingLineNumber = "616"
+            startingLineNumber = "657"
+            endingLineNumber = "657"
             landmarkName = "detecteVertex(Mat &amp;input,vector&lt;Vertex&gt; &amp;vertexes,vector&lt;Edge&gt; &amp;edges)"
             landmarkType = "7">
          </BreakpointContent>
@@ -442,11 +442,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "blackboard.cpp"
-            timestampString = "438967410.666722"
+            timestampString = "438981921.989811"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "662"
-            endingLineNumber = "662"
+            startingLineNumber = "713"
+            endingLineNumber = "713"
             landmarkName = "detecteVertex(Mat &amp;input,vector&lt;Vertex&gt; &amp;vertexes,vector&lt;Edge&gt; &amp;edges)"
             landmarkType = "7">
          </BreakpointContent>
@@ -458,11 +458,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "blackboard.cpp"
-            timestampString = "438967410.666722"
+            timestampString = "438981921.989811"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "619"
-            endingLineNumber = "619"
+            startingLineNumber = "660"
+            endingLineNumber = "660"
             landmarkName = "detecteVertex(Mat &amp;input,vector&lt;Vertex&gt; &amp;vertexes,vector&lt;Edge&gt; &amp;edges)"
             landmarkType = "7">
          </BreakpointContent>
@@ -474,11 +474,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "blackboard.cpp"
-            timestampString = "438967410.666722"
+            timestampString = "438981921.989811"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "248"
-            endingLineNumber = "248"
+            startingLineNumber = "255"
+            endingLineNumber = "255"
             landmarkName = "main (int argc, char **argv)"
             landmarkType = "7">
          </BreakpointContent>
@@ -490,11 +490,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "blackboard.cpp"
-            timestampString = "438967410.666722"
+            timestampString = "438981921.989811"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "250"
-            endingLineNumber = "250"
+            startingLineNumber = "258"
+            endingLineNumber = "258"
             landmarkName = "main (int argc, char **argv)"
             landmarkType = "7">
          </BreakpointContent>
@@ -506,11 +506,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "blackboard.cpp"
-            timestampString = "438967410.666722"
+            timestampString = "438981921.989811"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "247"
-            endingLineNumber = "247"
+            startingLineNumber = "254"
+            endingLineNumber = "254"
             landmarkName = "main (int argc, char **argv)"
             landmarkType = "7">
          </BreakpointContent>
@@ -522,11 +522,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "blackboard.cpp"
-            timestampString = "438967410.666722"
+            timestampString = "438981921.989811"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "572"
-            endingLineNumber = "572"
+            startingLineNumber = "591"
+            endingLineNumber = "591"
             landmarkName = "detecteVertex(Mat &amp;input,vector&lt;Vertex&gt; &amp;vertexes,vector&lt;Edge&gt; &amp;edges)"
             landmarkType = "7">
          </BreakpointContent>
@@ -538,28 +538,268 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "blackboard.cpp"
-            timestampString = "438967410.666722"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "633"
-            endingLineNumber = "633"
-            landmarkName = "detecteVertex(Mat &amp;input,vector&lt;Vertex&gt; &amp;vertexes,vector&lt;Edge&gt; &amp;edges)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "blackboard.cpp"
-            timestampString = "438967410.666722"
+            timestampString = "438981921.989811"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "684"
             endingLineNumber = "684"
             landmarkName = "detecteVertex(Mat &amp;input,vector&lt;Vertex&gt; &amp;vertexes,vector&lt;Edge&gt; &amp;edges)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "blackboard.cpp"
+            timestampString = "438983165.896391"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "737"
+            endingLineNumber = "737"
+            landmarkName = "detecteVertex(Mat &amp;input,vector&lt;Vertex&gt; &amp;vertexes,vector&lt;Edge&gt; &amp;edges)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "blackboard.cpp"
+            timestampString = "438983165.896391"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "788"
+            endingLineNumber = "788"
+            landmarkName = "genEdgeLabel(vector&lt;Vertex&gt; &amp;vertex, vector&lt;Edge&gt; &amp;edges)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "blackboard.cpp"
+            timestampString = "438983165.896391"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "790"
+            endingLineNumber = "790"
+            landmarkName = "genEdgeLabel(vector&lt;Vertex&gt; &amp;vertex, vector&lt;Edge&gt; &amp;edges)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "blackboard.cpp"
+            timestampString = "438983165.896391"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "949"
+            endingLineNumber = "949"
+            landmarkName = "calcEdge(vector&lt;Vertex&gt; &amp;vertexes,Edge &amp;edge)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "blackboard.cpp"
+            timestampString = "438983165.896391"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "893"
+            endingLineNumber = "893"
+            landmarkName = "calcEdge(vector&lt;Vertex&gt; &amp;vertexes,Edge &amp;edge)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "blackboard.cpp"
+            timestampString = "438983165.896391"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "894"
+            endingLineNumber = "894"
+            landmarkName = "calcEdge(vector&lt;Vertex&gt; &amp;vertexes,Edge &amp;edge)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "blackboard.cpp"
+            timestampString = "438983165.896391"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "910"
+            endingLineNumber = "910"
+            landmarkName = "calcEdge(vector&lt;Vertex&gt; &amp;vertexes,Edge &amp;edge)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "blackboard.cpp"
+            timestampString = "438983165.896391"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "885"
+            endingLineNumber = "885"
+            landmarkName = "getEdgeKind(Vertex_Kind kind, int edge_n ,bool out_dir)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "blackboard.cpp"
+            timestampString = "438983165.896391"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "919"
+            endingLineNumber = "919"
+            landmarkName = "calcEdge(vector&lt;Vertex&gt; &amp;vertexes,Edge &amp;edge)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "blackboard.cpp"
+            timestampString = "438983165.896391"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "925"
+            endingLineNumber = "925"
+            landmarkName = "calcEdge(vector&lt;Vertex&gt; &amp;vertexes,Edge &amp;edge)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "blackboard.cpp"
+            timestampString = "438983165.896391"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "916"
+            endingLineNumber = "916"
+            landmarkName = "calcEdge(vector&lt;Vertex&gt; &amp;vertexes,Edge &amp;edge)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "blackboard.cpp"
+            timestampString = "438983165.896391"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "787"
+            endingLineNumber = "787"
+            landmarkName = "genEdgeLabel(vector&lt;Vertex&gt; &amp;vertex, vector&lt;Edge&gt; &amp;edges)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "blackboard.cpp"
+            timestampString = "438983165.896391"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "892"
+            endingLineNumber = "892"
+            landmarkName = "calcEdge(vector&lt;Vertex&gt; &amp;vertexes,Edge &amp;edge)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "blackboard.cpp"
+            timestampString = "438983610.730878"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "688"
+            endingLineNumber = "688"
+            landmarkName = "detecteVertex(Mat &amp;input,vector&lt;Vertex&gt; &amp;vertexes,vector&lt;Edge&gt; &amp;edges)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "blackboard.cpp"
+            timestampString = "438983725.194044"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "798"
+            endingLineNumber = "798"
+            landmarkName = "genEdgeLabel(vector&lt;Vertex&gt; &amp;vertex, vector&lt;Edge&gt; &amp;edges)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "blackboard.cpp"
+            timestampString = "438983746.397826"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "257"
+            endingLineNumber = "257"
+            landmarkName = "main (int argc, char **argv)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

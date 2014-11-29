@@ -67,11 +67,12 @@ enum Vertex_Kind {
 };
 
 enum Edge_Kind{
-    EDGE_KIND_NONE,
+    KIND_EDGE_NONE,
+    KIND_EDGE_ERR,
     KIND_PLUS,
     KIND_MINUS,
-    KIND_RIGHT,
-    KIND_LEFT
+    KIND_FORE,
+    KIND_BACK
 };
 
 
@@ -134,7 +135,7 @@ Edge::Edge(int v1,int e1, int v2, int e2){
     vertex_number2=v2;
     edge_number1=e1;
     edge_number2=e2;
-    edge_kind=EDGE_KIND_NONE;
+    edge_kind=KIND_EDGE_NONE;
 }
 
 
@@ -169,9 +170,9 @@ Vertex::Vertex(Point p,int t){
 void detecteVertex(Mat &input,vector<Vertex> &vertexes,vector<Edge> &edges);
 void setLabel(cv::Mat& im, const std::string label, std::vector<cv::Point>& contour,Scalar color);
 bool edgeExists(vector<Edge> edges,int v1,int e1, int v2, int e2);
-void genEdgeLabel(vector<Vertex> &vertex, vector<Edge> &edge_list);
-Edge_Kind getEdgeKind(Vertex_Kind kind, int edge_n);
-void calcEdge(vector<Vertex> vertexes, Edge edge);
+int genEdgeLabel(vector<Vertex> &vertex, vector<Edge> &edges);
+Edge_Kind getEdgeKind(Vertex_Kind kind, int edge_n,bool out_dir);
+bool calcEdge(vector<Vertex> &vertexes, Edge &edge);
 bool checkLocateRight(Point p1,Point p2);
 
 double distance(Point p1,Point p2){
@@ -252,6 +253,7 @@ int main (int argc, char **argv)
     }
     
     detecteVertex(input, vertexes, edges);
+    //genEdgeLabel(vertexes, edges);
     
     cv::namedWindow("processed image",1);
 
@@ -537,7 +539,7 @@ void detecteVertex(Mat &input,vector<Vertex> &vertexes,vector<Edge> &edges){
                 vertexes[i].existing_kind_list.push_back(Vertex_Kind(KIND_T4));
                 
                 vertexes[i].attached_vertex[0]=approx_contours[tmp_vertexes[i].k[0]][other_0].vertex_id;//隣り合う頂点の登録
-                vertexes[i].attached_vertex[2]=approx_contours[tmp_vertexes[i].k[1]][other_1].vertex_id;
+                vertexes[i].attached_vertex[1]=approx_contours[tmp_vertexes[i].k[1]][other_1].vertex_id;
                 circle(input, vertexes[i].point,3,Scalar(0,200,0),2);
                 
                 //並び替え
@@ -730,6 +732,8 @@ void detecteVertex(Mat &input,vector<Vertex> &vertexes,vector<Edge> &edges){
         }
     }
     
+    
+    
     for(int i=0;i<vertexes.size();i++){//頂点のラベル表示
         cv::putText(input, to_string(i),vertexes[i].point , cv::FONT_HERSHEY_SIMPLEX, 1,Scalar(200,200,200), 1, 8);
         
@@ -777,25 +781,173 @@ void setLabel(cv::Mat& im, const std::string label, std::vector<cv::Point>& cont
 
 
 //線画のラベリング関数
-void genEdgeLabel(vector<Vertex> &vertex, vector<Edge> &edge_list){
+int genEdgeLabel(vector<Vertex> &vertex, vector<Edge> &edges){ //err 0; １つに決定 1 決定しない 2;
     
+    while(1){
+        bool delete_flag=false;
+        for(int i =0; i<edges.size();i++){
+            if(edges[i].edge_kind == KIND_EDGE_ERR)return 0;
+            delete_flag = calcEdge(vertex, edges[i]);
+        }
+        if(delete_flag == false){//何も消されなかったら抜ける
+            for(int i =0; i<edges.size();i++){
+                if(edges[i].edge_kind == KIND_EDGE_NONE)return 2;
+            }
+            
+            return 1;
+        }
+    }
     
-    
-    
+    return 0;
     
 }
 
 
-Edge_Kind getEdgeKind(Vertex_Kind kind, int edge_n){
-    if(kind==KIND_A1 && edge_n == 0)return KIND_MINUS;
-    if(kind==KIND_A1 && edge_n == 0)return KIND_MINUS;
-    if(kind==KIND_A1 && edge_n == 0)return KIND_MINUS;
-    if(kind==KIND_A1 && edge_n == 0)return KIND_MINUS;
+Edge_Kind getEdgeKind(Vertex_Kind kind, int edge_n ,bool out_dir){//edgeのv1ならout_dir=true v2ならfalse
+    Edge_Kind KIND_OUT,KIND_IN;
+    if(out_dir){
+        KIND_OUT=KIND_FORE;
+        KIND_IN=KIND_BACK;
+    }else{
+        KIND_OUT=KIND_BACK;
+        KIND_IN=KIND_FORE;
+    }
+    
+    if(kind==KIND_A1 && edge_n == 0)return KIND_IN;
+    if(kind==KIND_A1 && edge_n == 1)return KIND_OUT;
+    if(kind==KIND_A1 && edge_n == 2)return KIND_PLUS;
+    
+    if(kind==KIND_A2 && edge_n == 0)return KIND_PLUS;
+    if(kind==KIND_A2 && edge_n == 1)return KIND_PLUS;
+    if(kind==KIND_A2 && edge_n == 2)return KIND_MINUS;
+    
+    if(kind==KIND_A3 && edge_n == 0)return KIND_MINUS;
+    if(kind==KIND_A3 && edge_n == 1)return KIND_MINUS;
+    if(kind==KIND_A3 && edge_n == 2)return KIND_PLUS;
+    
+    
+    if(kind==KIND_Y1 && edge_n == 0)return KIND_PLUS;
+    if(kind==KIND_Y1 && edge_n == 1)return KIND_PLUS;
+    if(kind==KIND_Y1 && edge_n == 2)return KIND_PLUS;
+    
+    if(kind==KIND_Y2 && edge_n == 0)return KIND_IN;
+    if(kind==KIND_Y2 && edge_n == 1)return KIND_OUT;
+    if(kind==KIND_Y2 && edge_n == 2)return KIND_MINUS;
+    
+    if(kind==KIND_Y3 && edge_n == 0)return KIND_OUT;
+    if(kind==KIND_Y3 && edge_n == 1)return KIND_MINUS;
+    if(kind==KIND_Y3 && edge_n == 2)return KIND_IN;
+    
+    if(kind==KIND_Y4 && edge_n == 0)return KIND_MINUS;
+    if(kind==KIND_Y4 && edge_n == 1)return KIND_IN;
+    if(kind==KIND_Y4 && edge_n == 2)return KIND_OUT;
+    
+    if(kind==KIND_Y5 && edge_n == 0)return KIND_MINUS;
+    if(kind==KIND_Y5 && edge_n == 1)return KIND_MINUS;
+    if(kind==KIND_Y5 && edge_n == 2)return KIND_MINUS;
+    
+    
+    if(kind==KIND_L1 && edge_n == 0)return KIND_OUT;
+    if(kind==KIND_L1 && edge_n == 1)return KIND_IN;
+    
+    if(kind==KIND_L2 && edge_n == 0)return KIND_IN;
+    if(kind==KIND_L2 && edge_n == 1)return KIND_OUT;
+    
+    if(kind==KIND_L3 && edge_n == 0)return KIND_PLUS;
+    if(kind==KIND_L3 && edge_n == 1)return KIND_OUT;
+    
+    if(kind==KIND_L4 && edge_n == 0)return KIND_IN;
+    if(kind==KIND_L4 && edge_n == 1)return KIND_PLUS;
+    
+    if(kind==KIND_L5 && edge_n == 0)return KIND_MINUS;
+    if(kind==KIND_L5 && edge_n == 1)return KIND_IN;
+    
+    if(kind==KIND_L6 && edge_n == 0)return KIND_OUT;
+    if(kind==KIND_L6 && edge_n == 1)return KIND_MINUS;
+    
+    
+    if(kind==KIND_T1 && edge_n == 0)return KIND_OUT;
+    if(kind==KIND_T1 && edge_n == 1)return KIND_IN;
+    if(kind==KIND_T1 && edge_n == 2)return KIND_OUT;
+    
+    if(kind==KIND_T2 && edge_n == 0)return KIND_OUT;
+    if(kind==KIND_T2 && edge_n == 1)return KIND_IN;
+    if(kind==KIND_T2 && edge_n == 2)return KIND_IN;
 
+    if(kind==KIND_T3 && edge_n == 0)return KIND_OUT;
+    if(kind==KIND_T3 && edge_n == 1)return KIND_IN;
+    if(kind==KIND_T3 && edge_n == 2)return KIND_PLUS;
+
+    if(kind==KIND_T4 && edge_n == 0)return KIND_OUT;
+    if(kind==KIND_T4 && edge_n == 1)return KIND_IN;
+    if(kind==KIND_T4 && edge_n == 2)return KIND_MINUS;
+    
+ 
+    return KIND_EDGE_NONE;
 }
 
-void calcEdge(vector<Vertex> vertexes,Edge edge){
+bool calcEdge(vector<Vertex> &vertexes,Edge &edge){//何か削除したら戻り値 true
+    bool erase_flag1[6],erase_flag2[6];
+    memset(erase_flag1,0,sizeof(erase_flag1));//消すところfalseにする
+    memset(erase_flag2,0,sizeof(erase_flag2));
     
+    for(int i =0; i<vertexes[edge.vertex_number1].existing_kind_list.size();i++){
+        if(vertexes[edge.vertex_number1].existing_kind_list[i].flag==false)break;
+        for(int j=0; j<vertexes[edge.vertex_number2].existing_kind_list.size();j++){
+            if(vertexes[edge.vertex_number2].existing_kind_list[j].flag==false)break;
+
+            if((getEdgeKind(vertexes[edge.vertex_number1].existing_kind_list[i].vertex_kind, edge.edge_number1, true) ==
+               getEdgeKind(vertexes[edge.vertex_number2].existing_kind_list[j].vertex_kind, edge.edge_number2, true) &&
+               edge.edge_kind==KIND_EDGE_NONE)
+               ||
+               (getEdgeKind(vertexes[edge.vertex_number1].existing_kind_list[i].vertex_kind, edge.edge_number1, true) ==
+                getEdgeKind(vertexes[edge.vertex_number2].existing_kind_list[j].vertex_kind, edge.edge_number2, true) &&
+                getEdgeKind(vertexes[edge.vertex_number1].existing_kind_list[i].vertex_kind, edge.edge_number1, true) == edge.edge_kind)){//２頂点の型の組み合わせが存在 かつ　指定されていればその辺の型を優先
+                   
+                Edge_Kind test1=getEdgeKind(vertexes[edge.vertex_number1].existing_kind_list[i].vertex_kind, edge.edge_number1, true);
+                Edge_Kind test2=getEdgeKind(vertexes[edge.vertex_number2].existing_kind_list[j].vertex_kind, edge.edge_number2, true);
+                   
+                erase_flag1[i]=true;//存在したら消さない
+                erase_flag2[j]=true;
+            }
+        }
+    }
+    
+    bool erase_flag=false;
+    for(int i =0; i<vertexes[edge.vertex_number1].existing_kind_list.size();i++){
+        if(erase_flag1[i]==false && vertexes[edge.vertex_number1].existing_kind_list[i].flag){
+            vertexes[edge.vertex_number1].existing_kind_list[i].flag = false;
+            erase_flag=true;
+        }
+    }
+    for(int i =0; i<vertexes[edge.vertex_number2].existing_kind_list.size();i++){
+        if(erase_flag2[i]==false && vertexes[edge.vertex_number2].existing_kind_list[i].flag){
+            vertexes[edge.vertex_number2].existing_kind_list[i].flag = false;
+            erase_flag=true;
+        }
+    }
+    
+    int n1=0;//trueの数
+    int n2=0;
+    Edge_Kind tmp_edge=KIND_EDGE_NONE;
+    for(int i =0; i<vertexes[edge.vertex_number1].existing_kind_list.size();i++){
+        if(vertexes[edge.vertex_number1].existing_kind_list[i].flag)n1++;
+        tmp_edge=getEdgeKind(vertexes[edge.vertex_number1].existing_kind_list[i].vertex_kind, edge.edge_number1, true);
+    }
+    for(int i =0; i<vertexes[edge.vertex_number2].existing_kind_list.size();i++){
+        if(vertexes[edge.vertex_number2].existing_kind_list[i].flag)n2++;
+    }
+    
+    if(n1==1 && n2==1){
+        edge.edge_kind=tmp_edge;
+    }
+    if(n1==0 || n2==0){
+        edge.edge_kind=KIND_EDGE_ERR;
+        printf("CALC ERR!!\n");
+    }
+    
+    return erase_flag;
+
 }
 
 
