@@ -25,7 +25,7 @@ using namespace std;
 #define VERTEX_DISTANCE_COEFFICIENT 3.0//同一頂点とみなす距離の調整定数
 #define APPROX_COEFFICIENT 0.013 //頂点認識の調整係数
 
-enum Vertex_Kind {
+enum Vertex_Type {
     NONE_EDGE,
     A_EDGE,
     T_EDGE,
@@ -33,8 +33,41 @@ enum Vertex_Kind {
     L_EDGE
 };
 
-void detectLine(Mat &input,Mat &processed);
-void setLabel(cv::Mat& im, const std::string label, std::vector<cv::Point>& contour,Scalar color);
+enum Vertex_Kind {
+    VERTEX_KIND_NONE,
+    
+    KIND_L1,
+    KIND_L2,
+    KIND_L3,
+    KIND_L4,
+    KIND_L5,
+    KIND_L6,
+    
+    KIND_A1,
+    KIND_A2,
+    KIND_A3,
+    
+    KIND_Y1,
+    KIND_Y2,
+    KIND_Y3,
+    KIND_Y4,
+    KIND_Y5,
+    
+    KIND_T1,
+    KIND_T2,
+    KIND_T3,
+    KIND_T4
+};
+
+enum Edge_Kind{
+    EDGE_KIND_NONE,
+    KIND_PLUS,
+    KIND_MINUS,
+    KIND_RIGHT,
+    KIND_LEFT
+};
+
+
 
 class TmpVertex {//０自身　1最短　２２番め
 public:
@@ -68,21 +101,62 @@ Contour::Contour(Point p,bool u){
     
 }
 
+
+class Vertex_Existing_Kind{
+public:
+    Vertex_Kind vertex_kind;
+    bool flag;
+    Vertex_Existing_Kind(Vertex_Kind k);
+};
+
+Vertex_Existing_Kind::Vertex_Existing_Kind(Vertex_Kind k){
+    vertex_kind = k;
+    flag=true;
+}
+
+
+class Edge{
+public:
+    int vertex_number1, edge_number1, vertex_number2, edge_number2;
+    Edge_Kind edge_kind;
+    Edge(int v1,int e1, int v2, int e2);
+};
+
+Edge::Edge(int v1,int e1, int v2, int e2){
+    vertex_number1=v1;
+    vertex_number2=v2;
+    edge_number1=e1;
+    edge_number2=e2;
+    edge_kind=EDGE_KIND_NONE;
+}
+
+
 class Vertex { //頂点クラス
 public:
     Point point;
     int num_of_sides;//辺の数
-    Vertex_Kind kind;
+    Vertex_Type type;
     int attached_vertex[3];
+    vector<Vertex_Existing_Kind> existing_kind_list;
     Vertex(Point p,int t);
 };
+
 Vertex::Vertex(Point p,int t){
     point=p;
     num_of_sides=t;
-    kind=NONE_EDGE;
+    type=NONE_EDGE;
     attached_vertex[0]=attached_vertex[1]=attached_vertex[2]=-1;
 
 }
+
+
+
+
+
+
+void detecteVertex(Mat &input,vector<Vertex> vertexes,vector<Edge> edges);
+void setLabel(cv::Mat& im, const std::string label, std::vector<cv::Point>& contour,Scalar color);
+
 
 double distance(Point p1,Point p2){
     double dst=sqrt(pow(p1.x-p2.x,2)+pow(p1.y-p2.y,2));
@@ -91,8 +165,15 @@ double distance(Point p1,Point p2){
 
 
 
+
+
 int main (int argc, char **argv)
 {
+    
+    
+    vector<Vertex> vertexes;//頂点のベクタ
+    vector<Edge> edges;
+    
     
 //    //動画からの読み込み
 //    // 1. prepare VideoCapture Object
@@ -137,7 +218,7 @@ int main (int argc, char **argv)
 //    }
     
     //画像からの読み込み
-    cv::Mat input,processed;
+    cv::Mat input;
     const char *input_file;
     const char* preset_file = "/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/figures4.jpg";
     
@@ -154,11 +235,11 @@ int main (int argc, char **argv)
         exit(0);
     }
     
-    detectLine(input, processed);
+    detecteVertex(input, vertexes, edges);
     
     cv::namedWindow("processed image",1);
 
-    cv::imshow("processed image",processed);
+    cv::imshow("processed image",input);
 
     cv::waitKey(0);
 
@@ -168,7 +249,7 @@ int main (int argc, char **argv)
     return 0;
 }
 
-void detectLine(Mat &input,Mat &processed){
+void detecteVertex(Mat &input,vector<Vertex> vertexes,vector<Edge> edges){
     
     Mat canny_output;
     vector<vector<Point> > contours;
@@ -216,6 +297,8 @@ void detectLine(Mat &input,Mat &processed){
         
     }
     
+    
+    
     //VERTEX_DISTANCE決定
     //各頂点間の最小距離の平均を元に、どの距離までを同一頂点とみなすか決める。
     double ave_min_dst=0.0;
@@ -236,9 +319,11 @@ void detectLine(Mat &input,Mat &processed){
     ave_min_dst=ave_min_dst/approx_contours[0].size()*VERTEX_DISTANCE_COEFFICIENT;
     cout << "ave_min_dst :"<<ave_min_dst<<endl;
     
-    //頂点抽出
+    
+    
+    
+    //頂点生成
     vector<TmpVertex> tmp_vertexes;//一時的な頂点保存クラス
-    vector<Vertex> vertexes;
     
     for( int i = 0; i< approx_contours.size(); i++ ){
         //cout << "approx_contours[" << i << "]" << endl;
@@ -282,7 +367,7 @@ void detectLine(Mat &input,Mat &processed){
                 }
 
             }
-            //頂点生成
+            //vertexのインスタンス化
             if(tmp.dst[2] < ave_min_dst){//３辺からなる頂点
                 tmp.num_of_sides=3;
                 approx_contours[tmp.k[0]][tmp.l[0]].used=true;
@@ -316,6 +401,13 @@ void detectLine(Mat &input,Mat &processed){
             tmp_vertexes.push_back(tmp);
 
         }
+        
+        
+        
+        
+        //edge_listの生成
+        
+        
     }
 
     //頂点分類
@@ -369,7 +461,7 @@ void detectLine(Mat &input,Mat &processed){
             }else if((approx_contours[tmp_vertexes[i].k[0]][prev_0].point - vertexes[i].point)
                      .dot(approx_contours[tmp_vertexes[i].k[1]][next_1].point - vertexes[i].point)>0){
                 
-                if(norm(approx_contours[tmp_vertexes[i].k[0]][prev_0].point - vertexes[i].point)//隣の頂点の値を取得
+                if(norm(approx_contours[tmp_vertexes[i].k[0]][prev_0].point - vertexes[i].point)//隣り合う頂点の登録
                    < norm(approx_contours[tmp_vertexes[i].k[1]][next_1].point - vertexes[i].point)){
                     vertexes[i].attached_vertex[1]=approx_contours[tmp_vertexes[i].k[0]][prev_0].vertex_id;
                 }else vertexes[i].attached_vertex[1]=approx_contours[tmp_vertexes[i].k[1]][next_1].vertex_id;
@@ -379,7 +471,7 @@ void detectLine(Mat &input,Mat &processed){
             }else if((approx_contours[tmp_vertexes[i].k[0]][prev_0].point - vertexes[i].point)
                      .dot(approx_contours[tmp_vertexes[i].k[1]][prev_1].point - vertexes[i].point)>0){
                 
-                if(norm(approx_contours[tmp_vertexes[i].k[0]][prev_0].point - vertexes[i].point)//隣の頂点の値を取得
+                if(norm(approx_contours[tmp_vertexes[i].k[0]][prev_0].point - vertexes[i].point)//隣り合う頂点の登録
                    < norm(approx_contours[tmp_vertexes[i].k[1]][prev_1].point - vertexes[i].point)){
                     vertexes[i].attached_vertex[1]=approx_contours[tmp_vertexes[i].k[0]][prev_0].vertex_id;
                 }else vertexes[i].attached_vertex[1]=approx_contours[tmp_vertexes[i].k[1]][prev_1].vertex_id;
@@ -394,30 +486,46 @@ void detectLine(Mat &input,Mat &processed){
             if((approx_contours[tmp_vertexes[i].k[0]][other_0].point - vertexes[i].point)
                .dot(approx_contours[tmp_vertexes[i].k[1]][other_1].point - vertexes[i].point)>0){
                 //L型の場合
-                vertexes[i].kind=L_EDGE;
-                circle(drawing, vertexes[i].point,3,Scalar(0,0,0),2);
+                vertexes[i].type=L_EDGE;
+                
+                vertexes[i].existing_kind_list.push_back(Vertex_Kind(KIND_L1));
+                vertexes[i].existing_kind_list.push_back(Vertex_Kind(KIND_L2));
+                vertexes[i].existing_kind_list.push_back(Vertex_Kind(KIND_L3));
+                vertexes[i].existing_kind_list.push_back(Vertex_Kind(KIND_L4));
+                vertexes[i].existing_kind_list.push_back(Vertex_Kind(KIND_L5));
+                vertexes[i].existing_kind_list.push_back(Vertex_Kind(KIND_L6));
+                
+                circle(input, vertexes[i].point,3,Scalar(200,200,200),2);
 
-                if(norm(approx_contours[tmp_vertexes[i].k[0]][other_0].point - vertexes[i].point)
+                if(norm(approx_contours[tmp_vertexes[i].k[0]][other_0].point - vertexes[i].point)//隣り合う頂点の登録
                    < norm(approx_contours[tmp_vertexes[i].k[1]][other_1].point - vertexes[i].point)){
                     vertexes[i].attached_vertex[0]=approx_contours[tmp_vertexes[i].k[0]][other_0].vertex_id;
                 }else{
                     vertexes[i].attached_vertex[0]=approx_contours[tmp_vertexes[i].k[1]][other_1].vertex_id;
                 }
+                
+                
                 
                 
             }else{
                 //T型の場合
-                vertexes[i].kind=T_EDGE;
-                vertexes[i].attached_vertex[0]=approx_contours[tmp_vertexes[i].k[0]][next_0].vertex_id;
-                vertexes[i].attached_vertex[0]=approx_contours[tmp_vertexes[i].k[0]][prev_0].vertex_id;
-                circle(drawing, vertexes[i].point,3,Scalar(0,200,0),2);
+                vertexes[i].type=T_EDGE;
                 
-                if(norm(approx_contours[tmp_vertexes[i].k[0]][other_0].point - vertexes[i].point)
-                   < norm(approx_contours[tmp_vertexes[i].k[1]][other_1].point - vertexes[i].point)){
-                    vertexes[i].attached_vertex[0]=approx_contours[tmp_vertexes[i].k[0]][other_0].vertex_id;
-                }else{
-                    vertexes[i].attached_vertex[0]=approx_contours[tmp_vertexes[i].k[1]][other_1].vertex_id;
-                }
+                vertexes[i].existing_kind_list.push_back(Vertex_Kind(KIND_T1));
+                vertexes[i].existing_kind_list.push_back(Vertex_Kind(KIND_T2));
+                vertexes[i].existing_kind_list.push_back(Vertex_Kind(KIND_T3));
+                vertexes[i].existing_kind_list.push_back(Vertex_Kind(KIND_T4));
+                
+                vertexes[i].attached_vertex[0]=approx_contours[tmp_vertexes[i].k[0]][other_0].vertex_id;//隣り合う頂点の登録
+                vertexes[i].attached_vertex[2]=approx_contours[tmp_vertexes[i].k[1]][other_1].vertex_id;
+                circle(input, vertexes[i].point,3,Scalar(0,200,0),2);
+                
+//                if(norm(approx_contours[tmp_vertexes[i].k[0]][other_0].point - vertexes[i].point)
+//                   < norm(approx_contours[tmp_vertexes[i].k[1]][other_1].point - vertexes[i].point)){
+//                    vertexes[i].attached_vertex[0]=approx_contours[tmp_vertexes[i].k[0]][other_0].vertex_id;
+//                }else{
+//                    vertexes[i].attached_vertex[0]=approx_contours[tmp_vertexes[i].k[1]][other_1].vertex_id;
+//                }
                 
             }
             
@@ -428,7 +536,7 @@ void detectLine(Mat &input,Mat &processed){
 
         }//2頂点の場合終了
         
-        if(vertexes[i].num_of_sides==3){
+        if(vertexes[i].num_of_sides==3){//3頂点の場合
             int tmp_l[3][2];
             Point tmp_vector[3];
             int tmp_counter=0;
@@ -465,22 +573,47 @@ void detectLine(Mat &input,Mat &processed){
                                 tmp_counter++;
                                 if(tmp_counter==3){//３頂点見つけたはずなので角度取得
                                     flag=1;
-                                    double sum_angle=0.0;
-                                    sum_angle=acos(tmp_vector[0].dot(tmp_vector[1])/norm(tmp_vector[0])/norm(tmp_vector[1]));
-                                    sum_angle+=acos(tmp_vector[0].dot(tmp_vector[2])/norm(tmp_vector[0])/norm(tmp_vector[2]));
-                                    sum_angle+=acos(tmp_vector[1].dot(tmp_vector[2])/norm(tmp_vector[1])/norm(tmp_vector[2]));
+                                    double angle1,angle2,angle3=0.0;
+                                    double tmp_angle;
+                                    angle1=acos(tmp_vector[0].dot(tmp_vector[1])/norm(tmp_vector[0])/norm(tmp_vector[1]));
+                                    angle2=acos(tmp_vector[0].dot(tmp_vector[2])/norm(tmp_vector[0])/norm(tmp_vector[2]));
+                                    angle3=acos(tmp_vector[1].dot(tmp_vector[2])/norm(tmp_vector[1])/norm(tmp_vector[2]));
                                     
-                                    if(sum_angle < 6.108651){
+                                    
+                                    if(angle1+angle2+angle3 < 6.108651){
                                         //A型
-                                        vertexes[i].kind=A_EDGE;
-                                        circle(drawing, vertexes[i].point,3,Scalar(0,200,200),2);
+                                        vertexes[i].type=A_EDGE;
+                                        
+                                        vertexes[i].existing_kind_list.push_back(Vertex_Kind(KIND_A1));
+                                        vertexes[i].existing_kind_list.push_back(Vertex_Kind(KIND_A2));
+                                        vertexes[i].existing_kind_list.push_back(Vertex_Kind(KIND_A3));
+                                        
+                                        circle(input, vertexes[i].point,3,Scalar(0,200,200),2);
+                                        // vertexes[i].attached_vertex[1]が中央の接点になるように接点並び替え
+                                        if(angle1>angle2+angle3-0.174533){
+                                            tmp_angle = vertexes[i].attached_vertex[1];
+                                            vertexes[i].attached_vertex[1] = vertexes[i].attached_vertex[2];
+                                            vertexes[i].attached_vertex[2] = tmp_angle;
+                                        }else if(angle3>angle2+angle1-0.174533){
+                                            tmp_angle = vertexes[i].attached_vertex[1];
+                                            vertexes[i].attached_vertex[1] = vertexes[i].attached_vertex[0];
+                                            vertexes[i].attached_vertex[0] = tmp_angle;
+                                        }
+                                        
                                         //circle(drawing, vertexes[2].point,3,Scalar(0,200,200),2);
                                         //circle(drawing, vertexes[4].point,3,Scalar(0,200,200),2);
 
                                     }else{
                                         //Y型
-                                        vertexes[i].kind=Y_EDGE;
-                                        circle(drawing, vertexes[i].point,3,Scalar(150,100,150),2);
+                                        vertexes[i].type=Y_EDGE;
+                                        
+                                        vertexes[i].existing_kind_list.push_back(Vertex_Kind(KIND_Y1));
+                                        vertexes[i].existing_kind_list.push_back(Vertex_Kind(KIND_Y2));
+                                        vertexes[i].existing_kind_list.push_back(Vertex_Kind(KIND_Y3));
+                                        vertexes[i].existing_kind_list.push_back(Vertex_Kind(KIND_Y4));
+                                        vertexes[i].existing_kind_list.push_back(Vertex_Kind(KIND_Y5));
+                                        
+                                        circle(input, vertexes[i].point,3,Scalar(150,100,150),2);
 
                                     }
                                 }
@@ -491,16 +624,13 @@ void detectLine(Mat &input,Mat &processed){
                 }
             }
             
-            
-            
-            
         }//３頂点の場合終了
     }
     
     
-    drawing.copyTo(processed);
-    
 }
+
+
 
 void setLabel(cv::Mat& im, const std::string label, std::vector<cv::Point>& contour,Scalar color)
 {
@@ -516,6 +646,24 @@ void setLabel(cv::Mat& im, const std::string label, std::vector<cv::Point>& cont
     //cv::rectangle(im, pt + cv::Point(0, baseline), pt + cv::Point(text.width, -text.height), CV_RGB(255,255,255), CV_FILLED);
     cv::putText(im, label, pt, fontface, scale,color, thickness, 8);
 }
+
+
+
+
+//線画のラベリング関数
+void genEdgeLabel(vector<Vertex> vertex, vector<Edge> edge_list){
+    
+    
+    
+    
+    
+}
+
+
+
+
+
+
 
 //TODO 自前で類似線を合わせる処理つくる
 //実際の線の太さを想定して取得してみる
