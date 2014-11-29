@@ -5,6 +5,13 @@
 //  Created by Iwami kazuya on 2014/11/18.
 //  Copyright (c) 2014年 kazuya. All rights reserved.
 //
+//参考URL
+//https://opencv-code.com/tutorials/detecting-simple-shapes-in-an-image/
+//http://opencv.jp/opencv-2.1/cpp/structural_analysis_and_shape_descriptors.html
+//http://docs.opencv.org/doc/tutorials/imgproc/shapedescriptors/find_contours/find_contours.html
+
+
+
 
 #include "blackboard.h"
 
@@ -152,10 +159,13 @@ Vertex::Vertex(Point p,int t){
 
 
 
+//関数定義
 
 
-void detecteVertex(Mat &input,vector<Vertex> vertexes,vector<Edge> edges);
+
+void detecteVertex(Mat &input,vector<Vertex> &vertexes,vector<Edge> &edges);
 void setLabel(cv::Mat& im, const std::string label, std::vector<cv::Point>& contour,Scalar color);
+bool edgeExists(vector<Edge> edges,int v1,int e1, int v2, int e2);
 
 
 double distance(Point p1,Point p2){
@@ -249,7 +259,7 @@ int main (int argc, char **argv)
     return 0;
 }
 
-void detecteVertex(Mat &input,vector<Vertex> vertexes,vector<Edge> edges){
+void detecteVertex(Mat &input,vector<Vertex> &vertexes,vector<Edge> &edges){
     
     Mat canny_output;
     vector<vector<Point> > contours;
@@ -401,12 +411,6 @@ void detecteVertex(Mat &input,vector<Vertex> vertexes,vector<Edge> edges){
             tmp_vertexes.push_back(tmp);
 
         }
-        
-        
-        
-        
-        //edge_listの生成
-        
         
     }
 
@@ -625,11 +629,77 @@ void detecteVertex(Mat &input,vector<Vertex> vertexes,vector<Edge> edges){
             }
             
         }//３頂点の場合終了
+    }//頂点分類終了
+    
+    
+    
+    
+    //edge_listの生成
+    for(int i=0;i<vertexes.size();i++){
+        if(vertexes[i].num_of_sides==2){
+            for(int edge_n1=0; edge_n1<2; edge_n1++){
+                if(vertexes[vertexes[i].attached_vertex[edge_n1]].num_of_sides==2){
+                    for(int edge_n2=0;edge_n2<2;edge_n2++){
+                        if(i == vertexes[vertexes[i].attached_vertex[edge_n1]].attached_vertex[edge_n2]){//対応する２頂点検出
+                            if(edgeExists(edges, i, edge_n1, vertexes[i].attached_vertex[edge_n1], edge_n2) == false){//まだその辺が登録されていなかったら
+                                edges.push_back(Edge( i, edge_n1, vertexes[i].attached_vertex[edge_n1], edge_n2));
+                            }
+                        }
+                    }
+                }else if(vertexes[vertexes[i].attached_vertex[edge_n1]].num_of_sides==2){
+                    for(int edge_n2=0;edge_n2<2;edge_n2++){
+                        if(i == vertexes[vertexes[i].attached_vertex[edge_n1]].attached_vertex[edge_n2]){//対応する２頂点検出
+                            if(edgeExists(edges, i, edge_n1, vertexes[i].attached_vertex[edge_n1], edge_n2) == false){//まだその辺が登録されていなかったら
+                                edges.push_back(Edge( i, edge_n1, vertexes[i].attached_vertex[edge_n1], edge_n2));
+                            }
+                        }
+                    }
+                }
+                
+            }
+        }else if(vertexes[i].num_of_sides==3){
+            for(int edge_n1=0; edge_n1<3; edge_n1++){
+                if(vertexes[vertexes[i].attached_vertex[edge_n1]].num_of_sides==2){
+                    for(int edge_n2=0;edge_n2<2;edge_n2++){
+                        if(i == vertexes[vertexes[i].attached_vertex[edge_n1]].attached_vertex[edge_n2]){//対応する２頂点検出
+                            if(edgeExists(edges, i, edge_n1, vertexes[i].attached_vertex[edge_n1], edge_n2) == false){//まだその辺が登録されていなかったら
+                                edges.push_back(Edge( i, edge_n1, vertexes[i].attached_vertex[edge_n1], edge_n2));
+                            }
+                        }
+                    }
+                }else if(vertexes[vertexes[i].attached_vertex[edge_n1]].num_of_sides==2){
+                    for(int edge_n2=0;edge_n2<2;edge_n2++){
+                        if(i == vertexes[vertexes[i].attached_vertex[edge_n1]].attached_vertex[edge_n2]){//対応する２頂点検出
+                            if(edgeExists(edges, i, edge_n1, vertexes[i].attached_vertex[edge_n1], edge_n2) == false){//まだその辺が登録されていなかったら
+                                edges.push_back(Edge( i, edge_n1, vertexes[i].attached_vertex[edge_n1], edge_n2));
+                            }
+                        }
+                    }
+                }
+                
+            }
+        }
+    }
+    
+    for(int i=0;i<vertexes.size();i++){//頂点のラベル表示
+        cv::putText(input, to_string(i),vertexes[i].point , cv::FONT_HERSHEY_SIMPLEX, 1,Scalar(200,200,200), 1, 8);
+        
     }
     
     
 }
 
+//その辺が既に登録されているか
+bool edgeExists(vector<Edge> edges,int v1,int e1, int v2, int e2){    for(int i=0;i<edges.size();i++){
+        if(edges[i].vertex_number1==v1 && edges[i].edge_number1 == e1 && edges[i].vertex_number2==v2 && edges[i].edge_number2 == e2){
+            return true;
+        }
+        if(edges[i].vertex_number1==v2 && edges[i].edge_number1 == e2 && edges[i].vertex_number2==v1 && edges[i].edge_number2 == e1){
+            return true;
+        }
+    }
+    return false;
+}
 
 
 void setLabel(cv::Mat& im, const std::string label, std::vector<cv::Point>& contour,Scalar color)
