@@ -80,9 +80,8 @@ Vertex::Vertex(Point p,int t){
     point=p;
     num_of_sides=t;
     kind=NONE_EDGE;
-//    attached_vertex[0]=a[0];
-//    if(num_of_sides==2||num_of_sides==3)attached_vertex[1]=a[1];
-//    if(num_of_sides==3)attached_vertex[2]=a[2];
+    attached_vertex[0]=attached_vertex[1]=attached_vertex[2]=-1;
+
 }
 
 double distance(Point p1,Point p2){
@@ -431,8 +430,10 @@ void detectLine(Mat &input,Mat &processed){
         
         if(vertexes[i].num_of_sides==3){
             int tmp_l[3][2];
-            int pair_l[3][2];
-            int pair_l_counter=0;
+            Point tmp_vector[3];
+            int tmp_counter=0;
+            int flag=0;
+            
 
             for(int j=0;j<3;j++){ //頂点を構成する特徴点の前後にある特徴点を取得
                 if(tmp_vertexes[i].l[j]==0){
@@ -445,16 +446,45 @@ void detectLine(Mat &input,Mat &processed){
                 
             }
             
-            for(int n=0;n<3;n++){
-                for (int m=n+1; m<3; m++) {
-                    for(int p=0;p<2;p++){
-                        for(int q=0; q<2;q++){
+            for(int n=0;n<3 && flag==0;n++){
+                for (int m=n+1; m<3 && flag==0; m++) {
+                    for(int p=0;p<2 && flag==0;p++){
+                        for(int q=0; q<2 && flag==0;q++){
                             if((approx_contours[tmp_vertexes[i].k[n]][tmp_l[n][p]].point - vertexes[i].point)
                                .dot(approx_contours[tmp_vertexes[i].k[m]][tmp_l[m][q]].point - vertexes[i].point)/
                                norm(approx_contours[tmp_vertexes[i].k[n]][tmp_l[n][p]].point - vertexes[i].point)/
                                norm(approx_contours[tmp_vertexes[i].k[m]][tmp_l[m][q]].point - vertexes[i].point) > 0.93969){//cos(20°)
-                                pair_l[pair_l_counter][0]=
-                                pair_l_counter++;
+                                if(norm(approx_contours[tmp_vertexes[i].k[n]][tmp_l[n][p]].point - vertexes[i].point) <
+                                   norm(approx_contours[tmp_vertexes[i].k[m]][tmp_l[m][q]].point - vertexes[i].point)){
+                                    vertexes[i].attached_vertex[tmp_counter]=approx_contours[tmp_vertexes[i].k[n]][tmp_l[n][p]].vertex_id;
+                                    tmp_vector[tmp_counter]=approx_contours[tmp_vertexes[i].k[n]][tmp_l[n][p]].point- vertexes[i].point;
+                                }else{
+                                    vertexes[i].attached_vertex[tmp_counter]=approx_contours[tmp_vertexes[i].k[m]][tmp_l[m][q]].vertex_id;
+                                    tmp_vector[tmp_counter]=approx_contours[tmp_vertexes[i].k[m]][tmp_l[m][q]].point- vertexes[i].point;
+                                }
+                                tmp_counter++;
+                                if(tmp_counter==3){//３頂点見つけたはずなので角度取得
+                                    flag=1;
+                                    double sum_angle=0.0;
+                                    sum_angle=acos(tmp_vector[0].dot(tmp_vector[1])/norm(tmp_vector[0])/norm(tmp_vector[1]));
+                                    sum_angle+=acos(tmp_vector[0].dot(tmp_vector[2])/norm(tmp_vector[0])/norm(tmp_vector[2]));
+                                    sum_angle+=acos(tmp_vector[1].dot(tmp_vector[2])/norm(tmp_vector[1])/norm(tmp_vector[2]));
+                                    
+                                    if(sum_angle < 6.108651){
+                                        //A型
+                                        vertexes[i].kind=A_EDGE;
+                                        circle(drawing, vertexes[i].point,3,Scalar(0,200,200),2);
+                                        //circle(drawing, vertexes[2].point,3,Scalar(0,200,200),2);
+                                        //circle(drawing, vertexes[4].point,3,Scalar(0,200,200),2);
+
+                                    }else{
+                                        //Y型
+                                        vertexes[i].kind=Y_EDGE;
+                                        circle(drawing, vertexes[i].point,3,Scalar(150,100,150),2);
+
+                                    }
+                                }
+                                
                             }
                         }
                     }
