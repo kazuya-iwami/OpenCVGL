@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		E505D0BA1A1464C9007F988D /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E505D0B91A1464C9007F988D /* GLUT.framework */; };
 		E505D0BC1A1464DA007F988D /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E505D0BB1A1464DA007F988D /* OpenGL.framework */; };
-		E53B30DB1A1C6F490027C30C /* blackboard.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E53B30D51A1B24D60027C30C /* blackboard.cpp */; };
+		E588C8E41A2B9C6A0095FAE9 /* sample2-5.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E505D0C51A14759E007F988D /* sample2-5.cpp */; };
 		E59AE75E1A089D5800A470B8 /* libopencv_highgui.2.4.9.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E59AE75D1A089D5800A470B8 /* libopencv_highgui.2.4.9.dylib */; };
 		E59AE7601A089D6E00A470B8 /* libopencv_core.2.4.9.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E59AE75F1A089D6E00A470B8 /* libopencv_core.2.4.9.dylib */; };
 		E59AE7621A08AADE00A470B8 /* libopencv_objdetect.2.4.9.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E59AE7611A08AADE00A470B8 /* libopencv_objdetect.2.4.9.dylib */; };
@@ -182,7 +182,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E53B30DB1A1C6F490027C30C /* blackboard.cpp in Sources */,
+				E588C8E41A2B9C6A0095FAE9 /* sample2-5.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

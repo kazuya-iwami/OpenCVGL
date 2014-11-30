@@ -3,6 +3,9 @@
 #include <highgui.hpp>
 #include <stdio.h>
 
+#include <OpenGL/gl.h>
+#include <GLUT/glut.h>
+
 #define FLAG 1 //0:direct access 1:built-in function
 
 const char* preset_file = "/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/fruits.jpg";

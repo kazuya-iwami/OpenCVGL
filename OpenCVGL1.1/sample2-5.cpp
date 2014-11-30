@@ -12,8 +12,8 @@
 #define WINDOW_X (500)
 #define WINDOW_Y (500)
 #define WINDOW_NAME "test5"
-#define TEXTURE_HEIGHT (1290)
-#define TEXTURE_WIDTH (1290)
+#define TEXTURE_HEIGHT (512)
+#define TEXTURE_WIDTH (512)
 
 void init_GL(int argc, char *argv[]);
 void init();
@@ -34,6 +34,7 @@ double g_distance = 10.0;
 bool g_isLeftButtonOn = false;
 bool g_isRightButtonOn = false;
 GLuint g_TextureHandles[3] = {0,0,0};
+GLuint g_tex;
 cv::VideoCapture cap;    
 
 int main(int argc, char *argv[]){
@@ -60,20 +61,37 @@ void init_GL(int argc, char *argv[]){
 }
 
 void init(){
-    glClearColor(0.2, 0.2, 0.2, 0.2);
-    glGenTextures(3, g_TextureHandles);
+//    glClearColor(0.2, 0.2, 0.2, 0.2);
+//    glGenTextures(3, g_TextureHandles);
+//    
+//    for(int i = 0; i < 3; i++){
+//        glBindTexture(GL_TEXTURE_2D, g_TextureHandles[i]);
+//        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+//        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, TEXTURE_WIDTH,TEXTURE_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+//        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+//        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+//    }
     
-    for(int i = 0; i < 3; i++){
-        glBindTexture(GL_TEXTURE_2D, g_TextureHandles[i]);
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, TEXTURE_WIDTH,TEXTURE_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    }
+    // テクスチャを生成
+    glEnable( GL_TEXTURE_2D );
     
+    glGenTextures( 1, &g_tex );
+    glBindTexture( GL_TEXTURE_2D, g_tex);
     
+    glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, TEXTURE_WIDTH,TEXTURE_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+    glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
     
-    set_texture();
+    cv::Mat input = cv::imread("/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/flower1.jpg",1);
+    cv::cvtColor(input, input, CV_BGR2RGB);
+    
+    glTexSubImage2D(GL_TEXTURE_2D, 0, (TEXTURE_WIDTH - input.cols)/2, (TEXTURE_HEIGHT- input.rows)/2, input.cols, input.rows, GL_RGB, GL_UNSIGNED_BYTE, input.data);
+    
+    //set_texture();
 }
 
 void set_callback_functions(){
@@ -83,7 +101,7 @@ void set_callback_functions(){
     glutMotionFunc(glut_motion);
     glutPassiveMotionFunc(glut_motion);
     glutIdleFunc(glut_idle);
-    cap.open(0);
+//    cap.open(0);
 }
 
 void glut_keyboard(unsigned char key, int x, int y){
@@ -137,45 +155,79 @@ void glut_motion(int x, int y){
 }
 
 void glut_display(){
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective(30.0, 1.0, 0.1, 100);
+//    glMatrixMode(GL_PROJECTION);
+//    glLoadIdentity();
+//    gluPerspective(30.0, 1.0, 0.1, 100);
+//    
+//    glMatrixMode(GL_MODELVIEW);
+//    glLoadIdentity();
+//    gluLookAt(g_distance * cos(g_angle2) * sin(g_angle1),
+//              g_distance * sin(g_angle2),
+//              g_distance * cos(g_angle2) * cos(g_angle1),
+//              0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+//    
+//    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+//    glEnable(GL_DEPTH_TEST);
+//    draw_pyramid();
+//    glFlush();
+//    glDisable(GL_DEPTH_TEST);
+//    
+//    glutSwapBuffers();
     
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    gluLookAt(g_distance * cos(g_angle2) * sin(g_angle1),
-              g_distance * sin(g_angle2),
-              g_distance * cos(g_angle2) * cos(g_angle1),
-              0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
     
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glEnable(GL_DEPTH_TEST);
-    draw_pyramid();
+    // ビューポートの大きさをウィンドウと一致させる
+    glViewport( 0, 0, 500, 500);
+    
+    glClearColor( 0.0f, 0.0f, 0.0f, 1.0f );
+    glClear( GL_COLOR_BUFFER_BIT );
+    
+    // 射影行列を単位行列にする
+    glMatrixMode( GL_PROJECTION );
+    glLoadIdentity();
+    
+    // ワールド行列も単位行列にする
+    glMatrixMode( GL_MODELVIEW );
+    glLoadIdentity();
+    
+    glEnable( GL_TEXTURE_2D );
+    
+    // テクスチャを設定した画面サイズの矩形を描画
+    glColor3d( 1.0, 1.0, 1.0 );
+    glBegin( GL_QUADS );
+    glTexCoord2d( 0.0, 0.0 );
+    glVertex2d( -1.0, -1.0 );
+    glTexCoord2d( 1.0, 0.0 );
+    glVertex2d( 1.0, -1.0 );
+    glTexCoord2d( 1.0, 1.0 );
+    glVertex2d( 1.0, 1.0 );
+    glTexCoord2d( 0.0, 1.0 );
+    glVertex2d( -1.0, 1.0 );
+    glEnd();
+    
     glFlush();
-    glDisable(GL_DEPTH_TEST);
-    
     glutSwapBuffers();
+
 }
 
 void glut_idle(){
     static int counter = 0;
     
-    if(counter == 0){
-        glBindTexture(GL_TEXTURE_2D, g_TextureHandles[0]);
-    }else if(counter == 1000){
-        glBindTexture(GL_TEXTURE_2D, g_TextureHandles[1]);
-    }else if(counter == 2000){
-        glBindTexture(GL_TEXTURE_2D, g_TextureHandles[2]);
-    }
+//    if(counter == 0){
+//        glBindTexture(GL_TEXTURE_2D, g_TextureHandles[0]);
+//    }else if(counter == 1000){
+//        glBindTexture(GL_TEXTURE_2D, g_TextureHandles[1]);
+//    }else if(counter == 2000){
+//        glBindTexture(GL_TEXTURE_2D, g_TextureHandles[2]);
+//    }
     
-    cv::Mat frame;
-    cap >> frame;
-    cv::cvtColor(frame, frame, CV_BGR2RGB);
-    glBindTexture(GL_TEXTURE_2D, g_TextureHandles[0]);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, (TEXTURE_WIDTH - frame.cols)/2, (TEXTURE_HEIGHT- frame.rows)/2, frame.cols, frame.rows, GL_RGB, GL_UNSIGNED_BYTE, frame.data);
-    
-    counter++;
-    if(counter > 3000) counter = 0;
+//    cv::Mat frame;
+//    cap >> frame;
+//    cv::cvtColor(frame, frame, CV_BGR2RGB);
+//    glBindTexture(GL_TEXTURE_2D, g_TextureHandles[0]);
+//    glTexSubImage2D(GL_TEXTURE_2D, 0, (TEXTURE_WIDTH - frame.cols)/2, (TEXTURE_HEIGHT- frame.rows)/2, frame.cols, frame.rows, GL_RGB, GL_UNSIGNED_BYTE, frame.data);
+//    
+//    counter++;
+//    if(counter > 3000) counter = 0;
     
     glutPostRedisplay();
 }
