@@ -371,6 +371,7 @@ void moveObj(Charactor &chara ,Key_Type key_type,vector<Vertex> &vertexes,vector
     if(chara.floor_pos_z+ON_FLOOR_MARGIN > chara.pos.z && chara.vel_z < 0.1){ //床上にいるか判定
         chara.onfloor_flag= true;
         chara.vel_z = 0.0;
+        chara.pos.z = chara.floor_pos_z+2;
         
     }else{ //床から離れている
         chara.onfloor_flag = false;
