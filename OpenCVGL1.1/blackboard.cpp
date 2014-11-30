@@ -22,12 +22,28 @@
 #include <highgui.hpp>
 #include <objdetect.hpp>
 #include <imgproc.hpp>
+#include <OpenGL/gl.h>
+#include <GLUT/glut.h>
 
 #include <math.h>
 #include <iostream>
 
 using namespace cv;
 using namespace std;
+
+
+
+
+
+#define WINDOW_X (1080)
+#define WINDOW_Y (720)
+#define WINDOW_NAME "test5"
+#define TEXTURE_HEIGHT (720)
+#define TEXTURE_WIDTH (1080)
+
+
+
+
 
 #define VERTEX_DISTANCE_COEFFICIENT 3.0//同一頂点とみなす距離の調整定数
 #define APPROX_COEFFICIENT 0.013 //頂点認識の調整係数
@@ -76,8 +92,7 @@ enum Edge_Kind{
 };
 
 enum Key_Type{
-    KEY_NONE,
-    KEY_UP,
+    KEY_UP=0,
     KEY_DOWN,
     KEY_LEFT,
     KEY_RIGHT,
@@ -215,13 +230,39 @@ void calibration(Mat &mat,double &z_ratio,Point prev_p1, Point prev_p2, Point p1
 Point transform(Mat mat, Point prev_p);
 Point inv_transform(Mat mat, Point p);
 void drawObj(Mat &input,Environment &env,Charactor &chara,vector<Vertex> &vertexes,vector<Cube> &cubes);
-void moveObj(Charactor &chara ,Key_Type key_type,vector<Vertex> &vertexes,vector<Cube> &cubes);
+void moveObj();
+void drawTex(double x,double y,double w,double h,int type);
 
 double distance(Point p1,Point p2){
     double dst=sqrt(pow(p1.x-p2.x,2)+pow(p1.y-p2.y,2));
     return dst;
 }
 
+
+void init_GL(int argc, char *argv[]);
+void init(Mat &input);
+void set_callback_functions();
+
+void glut_display();
+void glut_keyboard(unsigned char key, int x, int y);
+void glut_mouse(int button, int state, int x, int y);
+void timer(int value);
+void glut_special(int key, int x,int y);
+void glut_special_up(int key, int x, int y);
+void glut_keyboard_up(unsigned char key, int x, int y);
+void set_texture();
+
+// グローバル変数
+
+GLuint g_tex[3];
+
+vector<Vertex> vertexes;//頂点のベクタ
+vector<Edge> edges;
+vector<Cube> cubes;
+Charactor chara(Point3d(0,0,0),"/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/charactor1.jpg");
+Environment env;
+
+bool keys[5];
 
 
 
@@ -292,70 +333,290 @@ int main (int argc, char **argv)
         exit(0);
     }
 
-    vector<Vertex> vertexes;//頂点のベクタ
-    vector<Edge> edges;
-    vector<Cube> cubes;
-    Charactor chara(Point3d(0,0,0),"/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/charactor1.jpg");
-    Environment env;
     
-    cv::namedWindow("processed image",1);
+    //cv::namedWindow("processed image",1);
     detecteObj(input,env, vertexes, edges,cubes);
     
     //genEdgeLabel(vertexes, edges);
     
     
-    //ここからループ
-    Mat background;
-    input.copyTo(background);
     
-    bool loop_flag=true;
-    while(loop_flag){
+    
+    /* OpenGLの初期化 */
+    init_GL(argc,argv);
+    
+    /* このプログラム特有の初期化 */
+    init(input);
+    
+    /* コールバック関数の登録 */
+    set_callback_functions();
+    
+    /* メインループ */
+    glutMainLoop();
+    
+    
+//    //ここからループ
+//    Mat background;
+//    input.copyTo(background);
+//    
+//    bool loop_flag=true;
+//    while(loop_flag){
+//        
+//        int k = waitKey(20);
+//                switch(k){
+//            case 'q':
+//            case 'Q':
+//                loop_flag=false;
+//                break;
+//            case 63234://left
+//                type=KEY_LEFT;
+//                break;
+//            case 63232://up
+//                type=KEY_UP;
+//                break;
+//            case 63235://right
+//                type=KEY_RIGHT;
+//                break;
+//            case 63233://down
+//                type=KEY_DOWN;
+//                break;
+//            case 32:
+//                type=KEY_SPACE;
+//                break;
+//                
+//        }
+//        
+//        moveObj(chara, type,vertexes,cubes);//キャラクターの移動
+//        
+//        input.copyTo(background);
+//        
+//        drawObj(background,env,chara,vertexes,cubes);//描画
+    
+        //cv::imshow("processed image",background);
         
-        int k = waitKey(20);
-        Key_Type type=KEY_NONE;
-        switch(k){
-            case 'q':
-            case 'Q':
-                loop_flag=false;
-                break;
-            case 63234://left
-                type=KEY_LEFT;
-                break;
-            case 63232://up
-                type=KEY_UP;
-                break;
-            case 63235://right
-                type=KEY_RIGHT;
-                break;
-            case 63233://down
-                type=KEY_DOWN;
-                break;
-            case 32:
-                type=KEY_SPACE;
-                break;
-                
-        }
-        
-        moveObj(chara, type,vertexes,cubes);//キャラクターの移動
-        
-        input.copyTo(background);
-        
-        drawObj(background,env,chara,vertexes,cubes);//描画
-        
-        cv::imshow("processed image",background);
-        
-    }
+  //  }
     
     
     return 0;
 }
 
-void moveObj(Charactor &chara ,Key_Type key_type,vector<Vertex> &vertexes,vector<Cube> &cubes){
+
+
+
+
+
+
+
+
+void init_GL(int argc, char *argv[]){
+    glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
+    glutInitWindowSize(WINDOW_X,WINDOW_Y);
+    glutCreateWindow(WINDOW_NAME);
     
-    const double GRAVITY = -0.5;//重力
+    glutIgnoreKeyRepeat(GL_TRUE);//キーボード長押し中の連続取得無視
+}
+
+void init(Mat &input){
+
+    // テクスチャを生成
+    glEnable( GL_TEXTURE_2D );
+    
+    glGenTextures( 3, g_tex);
+    glBindTexture(GL_TEXTURE_2D, g_tex[0]);
+    glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, input.cols,input.rows, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+    glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+    
+    
+    
+    cv::cvtColor(input, input, CV_BGR2RGB);
+    
+    
+    glTexSubImage2D(GL_TEXTURE_2D, 0, (TEXTURE_WIDTH - input.cols)/2, (TEXTURE_HEIGHT- input.rows)/2, input.cols, input.rows, GL_RGB, GL_UNSIGNED_BYTE, input.data);
+    
+    const char* inputFileNames[3] = {"","/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/charactor2.jpg", "/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/shade.jpg"};
+    for(int i=1; i<3; i++){
+        
+        
+        cv::Mat input_ = cv::imread(inputFileNames[i],1);
+        // BGR -> RGBの変換
+        cv::cvtColor(input_, input_, CV_BGR2RGB);
+        glBindTexture(GL_TEXTURE_2D, g_tex[i]);
+        
+        glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, input_.cols,input_.rows, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+        glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL );
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+        
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, input_.cols, input_.rows, GL_RGB, GL_UNSIGNED_BYTE, input_.data);
+
+    }    
+
+    
+}
+
+void set_callback_functions(){
+    glutDisplayFunc(glut_display);//描画はここ
+    glutKeyboardFunc(glut_keyboard);
+    glutKeyboardUpFunc(glut_keyboard_up);
+    glutSpecialFunc(glut_special);//矢印キー取得
+    glutSpecialUpFunc(glut_special_up);
+    glutTimerFunc(30, timer, 0);
+}
+
+void glut_special_up(int key, int x, int y){
+    if(key == GLUT_KEY_UP){
+        keys[KEY_UP]=false;
+    }
+    if(key == GLUT_KEY_DOWN){
+        keys[KEY_DOWN]=false;
+        
+    }
+    if(key == GLUT_KEY_RIGHT){
+        keys[KEY_RIGHT]=false;
+    }
+    if(key == GLUT_KEY_LEFT){
+        keys[KEY_LEFT]=false;
+        
+    }
+
+}
+
+void glut_special(int key, int x,int y){
+    if(key == GLUT_KEY_UP){
+        keys[KEY_UP]=true;
+    }
+    if(key == GLUT_KEY_DOWN){
+        keys[KEY_DOWN]=true;
+        
+    }
+    if(key == GLUT_KEY_RIGHT){
+        keys[KEY_RIGHT]=true;
+    }
+    if(key == GLUT_KEY_LEFT){
+        keys[KEY_LEFT]=true;
+        
+    }
+    
+}
+
+void glut_keyboard_up(unsigned char key, int x, int y){
+    if(key == 32)keys[KEY_SPACE]=false;
+}
+
+void glut_keyboard(unsigned char key, int x, int y){
+    switch(key){
+        case 'q':
+        case 'Q':
+            break;
+        case 32:
+            keys[KEY_SPACE]=true;
+            break;
+    }
+    glutPostRedisplay();
+}
+
+void timer(int value){
+    glutPostRedisplay();
+    moveObj();//キャラクターの移動
+    
+    glutTimerFunc(30, timer,0);
+}
+
+
+void glut_display(){
+    
+    
+    //3D → 2D の座標変換
+    Point pos2d = inv_transform(env.calibration_mat, Point(chara.pos.x,chara.pos.y)) + vertexes[vertexes[env.base_vertex].attached_vertex[2]].point
+    + Point(0,-chara.pos.z/env.z_ratio);
+    
+    Point shade_pos2d = inv_transform(env.calibration_mat, Point(chara.pos.x,chara.pos.y)) + vertexes[vertexes[env.base_vertex].attached_vertex[2]].point + Point(0,-chara.floor_pos_z/env.z_ratio);
+
+      
+    // ビューポートの大きさをウィンドウと一致させる
+    glViewport( 0, 0, WINDOW_X, WINDOW_Y);
+    
+    glClearColor( 0.0f, 0.0f, 0.0f, 1.0f );
+    glClear( GL_COLOR_BUFFER_BIT );
+    
+    // 射影行列を単位行列にする
+    glMatrixMode( GL_PROJECTION );
+    glLoadIdentity();
+    
+    // ワールド行列も単位行列にする
+    glMatrixMode( GL_MODELVIEW );
+    glLoadIdentity();
+    
+    
+    glEnable( GL_TEXTURE_2D );
+    glBindTexture(GL_TEXTURE_2D, g_tex[0]);
+
+    glPushMatrix();
+    // テクスチャを設定した画面サイズの矩形を描画
+    glColor3d( 1.0, 1.0, 1.0 );
+    glBegin( GL_QUADS );
+    glTexCoord2d( 0.0, 1.0 );
+    glVertex2d( -1.0, -1.0 );
+    glTexCoord2d( 1.0, 1.0 );
+    glVertex2d( 1.0, -1.0 );
+    glTexCoord2d( 1.0, 0.0 );
+    glVertex2d( 1.0, 1.0 );
+    glTexCoord2d( 0.0, 0.0 );
+    glVertex2d( -1.0, 1.0 );
+    glEnd();
+    
+    glPopMatrix();
+    
+    drawTex(pos2d.x, pos2d.y, 30, 30, 1);
+    
+    glFlush();
+    glutSwapBuffers();
+    
+}
+
+
+void drawTex(double x,double y,double w,double h,int type){
+    
+    glBindTexture(GL_TEXTURE_2D, g_tex[type]);
+    
+    double x1=2.0*x/WINDOW_X-1.0;
+    double y1=1.0-2.0*y/WINDOW_Y;
+    double x2=2.0*(x+w)/WINDOW_X-1.0;
+    double y2=1.0-2.0*(y+h)/WINDOW_Y;
+    glPushMatrix();
+    glColor3d( 1.0, 1.0, 1.0 );
+    glBegin( GL_QUADS );
+    glTexCoord2d( 0.0, 1.0 );
+    glVertex2d( x1, y1 );
+    glTexCoord2d( 1.0, 1.0 );
+    glVertex2d( x2, y1 );
+    glTexCoord2d( 1.0, 0.0 );
+    glVertex2d( x2, y2 );
+    glTexCoord2d( 0.0, 0.0 );
+    glVertex2d( x1, y2 );
+    glEnd();
+    
+    glPopMatrix();
+
+}
+
+
+
+void moveObj(){
+    
+    const double GRAVITY = -0.3;//重力
     const double ON_FLOOR_MARGIN = 10.0;//床上判定の床からの距離
     const double OBJ_MARGIN = 10.0;
-    const double MOVE_VEL = 10.0;
+    const double MOVE_VEL = 3.0;
     const double JUMP_VEL = 7.0;
     
     chara.floor_pos_z=0.0;//自分の足下のz座標
@@ -380,24 +641,14 @@ void moveObj(Charactor &chara ,Key_Type key_type,vector<Vertex> &vertexes,vector
     
     Point3d pre_pos = chara.pos;
     
-    switch((int)key_type){
-        case KEY_UP:
-            chara.pos.y+=MOVE_VEL;
-            break;
-        case KEY_DOWN:
-            chara.pos.y-=MOVE_VEL;
-            break;
-        case KEY_LEFT:
-            chara.pos.x-=MOVE_VEL;
-            break;
-        case KEY_RIGHT:
-            chara.pos.x+=MOVE_VEL;
-            break;
-        case KEY_SPACE:
-            if(chara.onfloor_flag == true){
-                chara.vel_z = JUMP_VEL;
-            }
-            break;
+    if(keys[KEY_UP])chara.pos.y+=MOVE_VEL;
+    if(keys[KEY_DOWN])chara.pos.y-=MOVE_VEL;
+    if(keys[KEY_LEFT])chara.pos.x-=MOVE_VEL;
+    if(keys[KEY_RIGHT])chara.pos.x+=MOVE_VEL;
+    if(keys[KEY_SPACE]){
+        if(chara.onfloor_flag == true){
+            chara.vel_z = JUMP_VEL;
+        }
     }
     
     chara.pos.z += chara.vel_z;
