@@ -76,7 +76,6 @@ enum Edge_Kind{
 };
 
 
-
 class TmpVertex {//０自身　1最短　２２番め
 public:
     int num_of_sides;//3:３辺からなる　2:2辺からなる 1:エラー
@@ -157,7 +156,14 @@ Vertex::Vertex(Point p,int t){
 
 }
 
+typedef vector<int> Surface;
 
+class Cube{
+public:
+    Surface surface[3];
+    Point3d lower_point3d,upper_point3d;
+    int critical_vertex;//0中心
+};
 
 
 
@@ -167,13 +173,16 @@ Vertex::Vertex(Point p,int t){
 
 
 
-void detecteVertex(Mat &input,vector<Vertex> &vertexes,vector<Edge> &edges);
+void detecteObj(Mat &input,vector<Vertex> &vertexes,vector<Edge> &edges,vector<Cube> &cubes);
 void setLabel(cv::Mat& im, const std::string label, std::vector<cv::Point>& contour,Scalar color);
 bool edgeExists(vector<Edge> edges,int v1,int e1, int v2, int e2);
 int genEdgeLabel(vector<Vertex> &vertex, vector<Edge> &edges);
 Edge_Kind getEdgeKind(Vertex_Kind kind, int edge_n,bool out_dir);
 bool calcEdge(vector<Vertex> &vertexes, Edge &edge);
 bool checkLocateRight(Point p1,Point p2);
+void calibration(Mat &mat,double &z_ratio,Point prev_p1, Point prev_p2, Point p1, Point p2);
+Point transform(Mat mat, Point prev_p);
+Point inv_transform(Mat mat, Point p);
 
 double distance(Point p1,Point p2){
     double dst=sqrt(pow(p1.x-p2.x,2)+pow(p1.y-p2.y,2));
@@ -190,6 +199,7 @@ int main (int argc, char **argv)
     
     vector<Vertex> vertexes;//頂点のベクタ
     vector<Edge> edges;
+    vector<Cube> cubes;
     
     
 //    //動画からの読み込み
@@ -252,7 +262,8 @@ int main (int argc, char **argv)
         exit(0);
     }
     
-    detecteVertex(input, vertexes, edges);
+    detecteObj(input, vertexes, edges,cubes);
+    
     //genEdgeLabel(vertexes, edges);
     
     cv::namedWindow("processed image",1);
@@ -267,7 +278,7 @@ int main (int argc, char **argv)
     return 0;
 }
 
-void detecteVertex(Mat &input,vector<Vertex> &vertexes,vector<Edge> &edges){
+void detecteObj(Mat &input,vector<Vertex> &vertexes,vector<Edge> &edges,vector<Cube> &cubes){
     
     Mat canny_output;
     vector<vector<Point> > contours;
@@ -683,8 +694,81 @@ void detecteVertex(Mat &input,vector<Vertex> &vertexes,vector<Edge> &edges){
     }//頂点分類終了
     
     
+    //Cube取得
+    
+    for(int i=0;i<vertexes.size();i++){
+        if(vertexes[i].type == Y_EDGE){
+            Cube cube;
+            int cube_counter=0;
+            for( int k = 0; k< approx_contours.size(); k++ ){
+                for( int l= 0; l< approx_contours[k].size(); l++ ){//ある頂点について
+                    if(approx_contours[k][l].vertex_id == i){
+                        Surface suface;
+                        for( int n= 0; n< approx_contours[k].size(); n++ ){
+                            suface.push_back(approx_contours[k][l].vertex_id);
+                        }
+                        cube.surface[cube_counter++]=suface;
+                    }
+                }
+            }
+            cube.critical_vertex=i;
+            cubes.push_back(cube);
+        }
+    }
+    
+    //critical_pointうめる
+    
+    for(int i=0;i<cubes.size();i++){
+        int tmp_y0=vertexes[cubes[i].critical_vertex].attached_vertex[0];
+        int tmp_y1=vertexes[cubes[i].critical_vertex].attached_vertex[1];
+        int tmp_y2=vertexes[cubes[i].critical_vertex].attached_vertex[2];
+        
+        if(vertexes[tmp_y2].point.y < vertexes[tmp_y0].point.y && vertexes[tmp_y2].point.y < vertexes[tmp_y1].point.y){
+            vertexes[cubes[i].critical_vertex].attached_vertex[0] = tmp_y2;
+            vertexes[cubes[i].critical_vertex].attached_vertex[1] = tmp_y0;
+            vertexes[cubes[i].critical_vertex].attached_vertex[2] = tmp_y1;
+
+        }else if(vertexes[tmp_y1].point.y < vertexes[tmp_y0].point.y && vertexes[tmp_y1].point.y < vertexes[tmp_y2].point.y){
+            vertexes[cubes[i].critical_vertex].attached_vertex[0] = tmp_y1;
+            vertexes[cubes[i].critical_vertex].attached_vertex[1] = tmp_y2;
+            vertexes[cubes[i].critical_vertex].attached_vertex[2] = tmp_y0;
+        }
+    }
     
     
+    
+    //3D空間での位置認識
+    Mat F;
+    double z_ratio=0.0;
+    double lower_point=0;
+    int cube_num = 0;
+    for(int i=0;i<cubes.size();i++){
+        for(int j=0;j<3;j++){
+            for(int k=0;k<cubes[i].surface[j].size();k++){
+                if(lower_point < vertexes[cubes[i].surface[j][k]].point.y){//上下逆
+                    lower_point = vertexes[cubes[i].surface[j][k]].point.y;
+                    cube_num=i;
+                }
+                
+            }
+        }
+    }
+    
+    //ベースの直方体について
+    calibration(F,z_ratio, vertexes[vertexes[cubes[cube_num].critical_vertex].attached_vertex[1]].point - vertexes[cubes[cube_num].critical_vertex].point, vertexes[vertexes[cubes[cube_num].critical_vertex].attached_vertex[0]].point - vertexes[cubes[cube_num].critical_vertex].point, Point(300,0), Point(0,300));
+    
+    cubes[cube_num].lower_point3d=Point3d(0.0,0.0,0.0);
+    cubes[cube_num].upper_point3d=Point3d(300,300,distance(Point(0,0),vertexes[vertexes[cubes[cube_num].critical_vertex].attached_vertex[2]].point - vertexes[cubes[cube_num].critical_vertex].point)*z_ratio);
+    
+    //ベースの上の直方体について
+    for(int i=0;i<cubes.size();i++){
+        if(i==cube_num)continue;
+        Point lp=transform(F,vertexes[vertexes[cubes[i].critical_vertex].attached_vertex[2]].point-vertexes[cubes[cube_num].critical_vertex].point);
+        cubes[i].lower_point3d=Point3d(lp.x,lp.y,cubes[cube_num].upper_point3d.z);
+        Point ul=transform(F,vertexes[vertexes[cubes[i].critical_vertex].attached_vertex[0]].point-vertexes[cubes[i].critical_vertex].point +
+                           vertexes[vertexes[cubes[i].critical_vertex].attached_vertex[1]].point-vertexes[cubes[i].critical_vertex].point);
+        cubes[i].upper_point3d=cubes[cube_num].lower_point3d + Point3d(ul.x,ul.y,distance(Point(0,0),vertexes[vertexes[cubes[i].critical_vertex].attached_vertex[2]].point - vertexes[cubes[i].critical_vertex].point)*z_ratio);
+    }
     //edge_listの生成
     for(int i=0;i<vertexes.size();i++){
         if(vertexes[i].type == L_EDGE){
@@ -742,10 +826,48 @@ void detecteVertex(Mat &input,vector<Vertex> &vertexes,vector<Edge> &edges){
     
 }
 
+void calibration(Mat &mat,double &z_ratio, Point prev_p1, Point prev_p2, Point p1, Point p2){//2Dto2Dの射影
+    Mat m=(Mat_<double>(2,2) << 1,1,1,1);
+    
+    Mat prev_m=(Mat_<double>(2,2) << prev_p1.x,prev_p2.x,prev_p1.y,prev_p2.y);
+
+    Mat p=(Mat_<double>(2,2) << p1.x,p2.x,p1.y,p2.y);
+    cout << prev_m << endl;
+    
+    m=p*prev_m.inv();
+    mat=m;
+    cout << mat << endl;
+    z_ratio = 300/distance(Point(0,0),prev_p1);
+}
+
+Point transform(Mat mat, Point prev_p){
+    
+    Mat prev_m=(Mat_<double>(2,1) << prev_p.x,prev_p.y);
+    cout << prev_m << endl;
+    Mat p_m=mat*prev_m;
+    
+    cout << p_m << endl;
+    Point p;
+    p.x=p_m.at<double>(0,0);
+    p.y=p_m.at<double>(1,0);
+    cout << p << endl;
+    return p;
+}
+
+Point inv_transform(Mat mat, Point p){
+    Mat p_m=(Mat_<double>(2,1) << p.x,p.y);
+    
+    Mat prev_m=mat.inv()*p_m;
+    Point prev_p;
+    prev_p.x=prev_m.at<double>(0, 0);
+    prev_p.y=prev_m.at<double>(1,0);
+    return prev_p;
+}
+
 bool checkLocateRight(Point p1,Point p2){ // P1→P2について　trueなら右にfalseなら左にある。
     if((p1.x * p2.y - p1.y * p2.x) < 0){
-        return  true;
-    }else return false;
+        return  false;
+    }else return true;
 }
 
 
