@@ -311,7 +311,7 @@ int main (int argc, char **argv)
     bool loop_flag=true;
     while(loop_flag){
         
-        int k = waitKey(5);
+        int k = waitKey(20);
         Key_Type type=KEY_NONE;
         switch(k){
             case 'q':
@@ -352,11 +352,11 @@ int main (int argc, char **argv)
 
 void moveObj(Charactor &chara ,Key_Type key_type,vector<Vertex> &vertexes,vector<Cube> &cubes){
     
-    const double GRAVITY = -1.5;//重力
+    const double GRAVITY = -0.5;//重力
     const double ON_FLOOR_MARGIN = 10.0;//床上判定の床からの距離
     const double OBJ_MARGIN = 10.0;
     const double MOVE_VEL = 10.0;
-    const double JUMP_VEL = 13.0;
+    const double JUMP_VEL = 7.0;
     
     chara.floor_pos_z=0.0;//自分の足下のz座標
     for(int i=0;i<cubes.size();i++){
@@ -371,7 +371,6 @@ void moveObj(Charactor &chara ,Key_Type key_type,vector<Vertex> &vertexes,vector
     if(chara.floor_pos_z+ON_FLOOR_MARGIN > chara.pos.z && chara.vel_z < 0.1){ //床上にいるか判定
         chara.onfloor_flag= true;
         chara.vel_z = 0.0;
-        chara.pos.z = chara.floor_pos_z+2;
         
     }else{ //床から離れている
         chara.onfloor_flag = false;
