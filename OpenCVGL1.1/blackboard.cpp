@@ -75,6 +75,15 @@ enum Edge_Kind{
     KIND_BACK
 };
 
+enum Key_Type{
+    KEY_NONE,
+    KEY_UP,
+    KEY_DOWN,
+    KEY_LEFT,
+    KEY_RIGHT,
+    KEY_SPACE
+};
+
 
 class TmpVertex {//０自身　1最短　２２番め
 public:
@@ -166,14 +175,36 @@ public:
 };
 
 
+class Charactor {
+public:
+    bool onfloor_flag;
+    Point3d pos;
+    double vel_z;
+    double floor_pos_z;
+    cv::Mat image;
+    Charactor(Point3d p, String file_name);
+};
 
+Charactor::Charactor(Point3d p, String file_name){
+    onfloor_flag=true;
+    pos=p;
+    vel_z = 0.0;
+    floor_pos_z=0.0;
+    image = imread(file_name);
+}
 
+class Environment{
+public:
+    Mat calibration_mat;
+    int base_vertex;
+    double z_ratio;
+};
 
 //関数定義
 
 
 
-void detecteObj(Mat &input,vector<Vertex> &vertexes,vector<Edge> &edges,vector<Cube> &cubes);
+void detecteObj(Mat &input,Environment &env,vector<Vertex> &vertexes,vector<Edge> &edges,vector<Cube> &cubes);
 void setLabel(cv::Mat& im, const std::string label, std::vector<cv::Point>& contour,Scalar color);
 bool edgeExists(vector<Edge> edges,int v1,int e1, int v2, int e2);
 int genEdgeLabel(vector<Vertex> &vertex, vector<Edge> &edges);
@@ -183,6 +214,8 @@ bool checkLocateRight(Point p1,Point p2);
 void calibration(Mat &mat,double &z_ratio,Point prev_p1, Point prev_p2, Point p1, Point p2);
 Point transform(Mat mat, Point prev_p);
 Point inv_transform(Mat mat, Point p);
+void drawObj(Mat &input,Environment &env,Charactor &chara,vector<Vertex> &vertexes,vector<Cube> &cubes);
+void moveObj(Charactor &chara ,Key_Type key_type,vector<Vertex> &vertexes,vector<Cube> &cubes);
 
 double distance(Point p1,Point p2){
     double dst=sqrt(pow(p1.x-p2.x,2)+pow(p1.y-p2.y,2));
@@ -197,9 +230,6 @@ int main (int argc, char **argv)
 {
     
     
-    vector<Vertex> vertexes;//頂点のベクタ
-    vector<Edge> edges;
-    vector<Cube> cubes;
     
     
 //    //動画からの読み込み
@@ -261,24 +291,146 @@ int main (int argc, char **argv)
         fprintf(stderr,"cannot open %s\n",input_file);
         exit(0);
     }
+
+    vector<Vertex> vertexes;//頂点のベクタ
+    vector<Edge> edges;
+    vector<Cube> cubes;
+    Charactor chara(Point3d(0,0,0),"/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/charactor1.jpg");
+    Environment env;
     
-    detecteObj(input, vertexes, edges,cubes);
+    cv::namedWindow("processed image",1);
+    detecteObj(input,env, vertexes, edges,cubes);
     
     //genEdgeLabel(vertexes, edges);
     
-    cv::namedWindow("processed image",1);
-
-    cv::imshow("processed image",input);
-
-    cv::waitKey(0);
-
     
+    //ここからループ
+    Mat background;
+    input.copyTo(background);
+    
+    bool loop_flag=true;
+    while(loop_flag){
+        
+        int k = waitKey(20);
+        Key_Type type=KEY_NONE;
+        switch(k){
+            case 'q':
+            case 'Q':
+                loop_flag=false;
+                break;
+            case 63234://left
+                type=KEY_LEFT;
+                break;
+            case 63232://up
+                type=KEY_UP;
+                break;
+            case 63235://right
+                type=KEY_RIGHT;
+                break;
+            case 63233://down
+                type=KEY_DOWN;
+                break;
+            case 32:
+                type=KEY_SPACE;
+                break;
+                
+        }
+        
+        moveObj(chara, type,vertexes,cubes);//キャラクターの移動
+        
+        input.copyTo(background);
+        
+        drawObj(background,env,chara,vertexes,cubes);//描画
+        
+        cv::imshow("processed image",background);
+        
+    }
     
     
     return 0;
 }
 
-void detecteObj(Mat &input,vector<Vertex> &vertexes,vector<Edge> &edges,vector<Cube> &cubes){
+void moveObj(Charactor &chara ,Key_Type key_type,vector<Vertex> &vertexes,vector<Cube> &cubes){
+    
+    const double GRAVITY = -0.5;//重力
+    const double ON_FLOOR_MARGIN = 10.0;//床上判定の床からの距離
+    const double OBJ_MARGIN = 10.0;
+    const double MOVE_VEL = 10.0;
+    const double JUMP_VEL = 7.0;
+    
+    chara.floor_pos_z=0.0;//自分の足下のz座標
+    for(int i=0;i<cubes.size();i++){
+        if(chara.pos.x > cubes[i].lower_point3d.x && chara.pos.x < cubes[i].upper_point3d.x
+           && chara.pos.y > cubes[i].lower_point3d.y && chara.pos.y < cubes[i].upper_point3d.y){
+            if(chara.floor_pos_z < cubes[i].upper_point3d.z){
+                chara.floor_pos_z = cubes[i].upper_point3d.z;
+            }
+        }
+    }
+    
+    if(chara.floor_pos_z+ON_FLOOR_MARGIN > chara.pos.z && chara.vel_z < 0.1){ //床上にいるか判定
+        chara.onfloor_flag= true;
+        chara.vel_z = 0.0;
+        
+    }else{ //床から離れている
+        chara.onfloor_flag = false;
+        chara.vel_z += GRAVITY;
+    }
+    
+    Point3d pre_pos = chara.pos;
+    
+    switch((int)key_type){
+        case KEY_UP:
+            chara.pos.y+=MOVE_VEL;
+            break;
+        case KEY_DOWN:
+            chara.pos.y-=MOVE_VEL;
+            break;
+        case KEY_LEFT:
+            chara.pos.x-=MOVE_VEL;
+            break;
+        case KEY_RIGHT:
+            chara.pos.x+=MOVE_VEL;
+            break;
+        case KEY_SPACE:
+            if(chara.onfloor_flag == true){
+                chara.vel_z = JUMP_VEL;
+            }
+            break;
+    }
+    
+    chara.pos.z += chara.vel_z;
+    
+    for(int i=0;i<cubes.size();i++){ //障害物との当たり判定
+        if(chara.pos.x > cubes[i].lower_point3d.x - OBJ_MARGIN && chara.pos.x < cubes[i].upper_point3d.x + OBJ_MARGIN
+           && chara.pos.y > cubes[i].lower_point3d.y - OBJ_MARGIN && chara.pos.y < cubes[i].upper_point3d.y + OBJ_MARGIN
+           && chara.pos.z + ON_FLOOR_MARGIN > cubes[i].lower_point3d.z  && chara.pos.z < cubes[i].upper_point3d.z){
+            chara.pos.x=pre_pos.x;
+            chara.pos.y=pre_pos.y;
+            
+        }
+    }
+    
+}
+
+void drawObj(Mat &input,Environment &env,Charactor &chara,vector<Vertex> &vertexes,vector<Cube> &cubes){
+    
+//    Rect roi_rect(10,10,10+chara.image.rows,10+chara.image.cols);
+//    Mat roi = input(Rect(chara.pos.x,chara.pos.y,chara.image.cols,chara.image.rows));
+//    chara.image.copyTo(roi);
+    
+    //3D → 2D の座標変換
+    Point pos2d = inv_transform(env.calibration_mat, Point(chara.pos.x,chara.pos.y)) + vertexes[vertexes[env.base_vertex].attached_vertex[2]].point
+    + Point(0,-chara.pos.z/env.z_ratio);
+    
+    Point shade_pos2d = inv_transform(env.calibration_mat, Point(chara.pos.x,chara.pos.y)) + vertexes[vertexes[env.base_vertex].attached_vertex[2]].point + Point(0,-chara.floor_pos_z/env.z_ratio);
+    
+    circle(input, shade_pos2d,3,Scalar(0,0,0),2);//影
+    circle(input, pos2d,3,Scalar(200,0,0),2);//キャラクター
+    
+}
+
+void detecteObj(Mat &input,Environment &env,vector<Vertex> &vertexes,vector<Edge> &edges,vector<Cube> &cubes){
     
     Mat canny_output;
     vector<vector<Point> > contours;
@@ -738,7 +890,7 @@ void detecteObj(Mat &input,vector<Vertex> &vertexes,vector<Edge> &edges,vector<C
     
     
     //3D空間での位置認識
-    Mat F;
+
     double z_ratio=0.0;
     double lower_point=0;
     int cube_num = 0;
@@ -755,19 +907,22 @@ void detecteObj(Mat &input,vector<Vertex> &vertexes,vector<Edge> &edges,vector<C
     }
     
     //ベースの直方体について
-    calibration(F,z_ratio, vertexes[vertexes[cubes[cube_num].critical_vertex].attached_vertex[1]].point - vertexes[cubes[cube_num].critical_vertex].point, vertexes[vertexes[cubes[cube_num].critical_vertex].attached_vertex[0]].point - vertexes[cubes[cube_num].critical_vertex].point, Point(300,0), Point(0,300));
+    calibration(env.calibration_mat,z_ratio, vertexes[vertexes[cubes[cube_num].critical_vertex].attached_vertex[1]].point - vertexes[cubes[cube_num].critical_vertex].point, vertexes[vertexes[cubes[cube_num].critical_vertex].attached_vertex[0]].point - vertexes[cubes[cube_num].critical_vertex].point, Point(300,0), Point(0,300));
+    
+    env.z_ratio = z_ratio;
     
     cubes[cube_num].lower_point3d=Point3d(0.0,0.0,0.0);
     cubes[cube_num].upper_point3d=Point3d(300,300,distance(Point(0,0),vertexes[vertexes[cubes[cube_num].critical_vertex].attached_vertex[2]].point - vertexes[cubes[cube_num].critical_vertex].point)*z_ratio);
     
+    env.base_vertex = cubes[cube_num].critical_vertex;
+    
     //ベースの上の直方体について
     for(int i=0;i<cubes.size();i++){
         if(i==cube_num)continue;
-        Point lp=transform(F,vertexes[vertexes[cubes[i].critical_vertex].attached_vertex[2]].point-vertexes[cubes[cube_num].critical_vertex].point);
+        Point lp=transform(env.calibration_mat,vertexes[vertexes[cubes[i].critical_vertex].attached_vertex[2]].point-vertexes[cubes[cube_num].critical_vertex].point);
         cubes[i].lower_point3d=Point3d(lp.x,lp.y,cubes[cube_num].upper_point3d.z);
-        Point ul=transform(F,vertexes[vertexes[cubes[i].critical_vertex].attached_vertex[0]].point-vertexes[cubes[i].critical_vertex].point +
-                           vertexes[vertexes[cubes[i].critical_vertex].attached_vertex[1]].point-vertexes[cubes[i].critical_vertex].point);
-        cubes[i].upper_point3d=cubes[cube_num].lower_point3d + Point3d(ul.x,ul.y,distance(Point(0,0),vertexes[vertexes[cubes[i].critical_vertex].attached_vertex[2]].point - vertexes[cubes[i].critical_vertex].point)*z_ratio);
+        Point ul=transform(env.calibration_mat,vertexes[vertexes[cubes[i].critical_vertex].attached_vertex[0]].point-vertexes[cubes[i].critical_vertex].point +  vertexes[vertexes[cubes[i].critical_vertex].attached_vertex[1]].point-vertexes[cubes[i].critical_vertex].point);
+        cubes[i].upper_point3d=cubes[i].lower_point3d + Point3d(ul.x,ul.y,distance(Point(0,0),vertexes[vertexes[cubes[i].critical_vertex].attached_vertex[2]].point - vertexes[cubes[i].critical_vertex].point)*z_ratio);
     }
     //edge_listの生成
     for(int i=0;i<vertexes.size();i++){
@@ -1026,8 +1181,6 @@ bool calcEdge(vector<Vertex> &vertexes,Edge &edge){//何か削除したら戻り
                 getEdgeKind(vertexes[edge.vertex_number2].existing_kind_list[j].vertex_kind, edge.edge_number2, true) &&
                 getEdgeKind(vertexes[edge.vertex_number1].existing_kind_list[i].vertex_kind, edge.edge_number1, true) == edge.edge_kind)){//２頂点の型の組み合わせが存在 かつ　指定されていればその辺の型を優先
                    
-                Edge_Kind test1=getEdgeKind(vertexes[edge.vertex_number1].existing_kind_list[i].vertex_kind, edge.edge_number1, true);
-                Edge_Kind test2=getEdgeKind(vertexes[edge.vertex_number2].existing_kind_list[j].vertex_kind, edge.edge_number2, true);
                    
                 erase_flag1[i]=true;//存在したら消さない
                 erase_flag2[j]=true;
