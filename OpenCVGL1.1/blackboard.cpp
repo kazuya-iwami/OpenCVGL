@@ -233,6 +233,7 @@ void drawObj(Mat &input,Environment &env,Charactor &chara,vector<Vertex> &vertex
 void moveObj();
 void drawTex(double x,double y,double w,double h,int type);
 
+
 double distance(Point p1,Point p2){
     double dst=sqrt(pow(p1.x-p2.x,2)+pow(p1.y-p2.y,2));
     return dst;
@@ -259,11 +260,10 @@ GLuint g_tex[3];
 vector<Vertex> vertexes;//頂点のベクタ
 vector<Edge> edges;
 vector<Cube> cubes;
-Charactor chara(Point3d(0,0,0),"/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/charactor1.jpg");
+Charactor chara(Point3d(-20,-20,0),"/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/charactor1.jpg");
 Environment env;
 
 bool keys[5];
-
 
 
 
@@ -409,6 +409,7 @@ int main (int argc, char **argv)
 
 
 void init_GL(int argc, char *argv[]){
+    
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
     glutInitWindowSize(WINDOW_X,WINDOW_Y);
@@ -419,6 +420,7 @@ void init_GL(int argc, char *argv[]){
 
 void init(Mat &input){
 
+    
     // テクスチャを生成
     glEnable( GL_TEXTURE_2D );
     
@@ -432,14 +434,14 @@ void init(Mat &input){
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
     
-    
-    
     cv::cvtColor(input, input, CV_BGR2RGB);
-    
     
     glTexSubImage2D(GL_TEXTURE_2D, 0, (TEXTURE_WIDTH - input.cols)/2, (TEXTURE_HEIGHT- input.rows)/2, input.cols, input.rows, GL_RGB, GL_UNSIGNED_BYTE, input.data);
     
-    const char* inputFileNames[3] = {"","/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/charactor2.jpg", "/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/shade.jpg"};
+    
+    
+    
+    const char* inputFileNames[3] = {"","/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/charactor2.jpg", "/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/shade.png"};
     for(int i=1; i<3; i++){
         
         
@@ -460,7 +462,7 @@ void init(Mat &input){
 
     }    
 
-    
+    //LoadGLTextures();
 }
 
 void set_callback_functions(){
@@ -533,7 +535,7 @@ void timer(int value){
 
 
 void glut_display(){
-    
+
     
     //3D → 2D の座標変換
     Point pos2d = inv_transform(env.calibration_mat, Point(chara.pos.x,chara.pos.y)) + vertexes[vertexes[env.base_vertex].attached_vertex[2]].point
@@ -575,8 +577,9 @@ void glut_display(){
     glEnd();
     
     glPopMatrix();
-    
+    drawTex(shade_pos2d.x, shade_pos2d.y, 20, 20, 2);
     drawTex(pos2d.x, pos2d.y, 30, 30, 1);
+    
     
     glFlush();
     glutSwapBuffers();
@@ -584,8 +587,12 @@ void glut_display(){
 }
 
 
+
+
+
 void drawTex(double x,double y,double w,double h,int type){
     
+
     glBindTexture(GL_TEXTURE_2D, g_tex[type]);
     
     double x1=2.0*x/WINDOW_X-1.0;
@@ -606,6 +613,7 @@ void drawTex(double x,double y,double w,double h,int type){
     glEnd();
     
     glPopMatrix();
+    
 
 }
 
@@ -726,7 +734,7 @@ void detecteObj(Mat &input,Environment &env,vector<Vertex> &vertexes,vector<Edge
         
         Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
         drawContours( drawing, contours, i, color, 1, 8, hierarchy, 0, Point() );
-        setLabel(drawing, to_string(i), approx,color);
+        //setLabel(drawing, to_string(i), approx,color);
         
     }
     
@@ -1225,10 +1233,10 @@ void detecteObj(Mat &input,Environment &env,vector<Vertex> &vertexes,vector<Edge
     
     
     
-    for(int i=0;i<vertexes.size();i++){//頂点のラベル表示
-        cv::putText(input, to_string(i),vertexes[i].point , cv::FONT_HERSHEY_SIMPLEX, 1,Scalar(200,200,200), 1, 8);
-        
-    }
+//    for(int i=0;i<vertexes.size();i++){//頂点のラベル表示
+//        cv::putText(input, to_string(i),vertexes[i].point , cv::FONT_HERSHEY_SIMPLEX, 1,Scalar(200,200,200), 1, 8);
+//        
+//    }
     
     
 }
@@ -1476,6 +1484,7 @@ bool calcEdge(vector<Vertex> &vertexes,Edge &edge){//何か削除したら戻り
     return erase_flag;
 
 }
+
 
 
 
