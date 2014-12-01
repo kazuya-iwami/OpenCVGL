@@ -586,7 +586,7 @@ void glut_display(){
     
     
     drawTex(shade_pos2d.x, shade_pos2d.y, 20, 20, 2);
-    if(chara.visible == true)drawTex(pos2d.x, pos2d.y, 20, 20, 1);
+    drawTex(pos2d.x, pos2d.y, 20, 20, 1);
     
     
     
@@ -612,26 +612,32 @@ void drawTex(double x,double y,double w,double h,int type){
         glEnable(GL_LIGHTING);
         glEnable(GL_LIGHT1);
         
+        if(!chara.visible){
+            glBlendFunc(GL_ONE , GL_ONE);
+            glEnable(GL_BLEND);
+        }
+        
         double g_angle3 = 2.0;
         double g_angle4 = 3.141592/4;
         GLfloat lightpos[]={static_cast<GLfloat>(5 * cos(g_angle4) * sin(g_angle3)),
             static_cast<GLfloat>(5 * sin(g_angle4)),
             static_cast<GLfloat>(5 * cos(g_angle4) * cos(g_angle3)),
             1.0};
-        GLfloat diffuse[] = {0.8, 1.0, 1.0, 1.0};
+        GLfloat diffuse[] = {0.8, 1.0, 1.0, 0.1};
         glLightfv(GL_LIGHT1, GL_POSITION,lightpos);
         glLightfv(GL_LIGHT1, GL_DIFFUSE,diffuse);
         glPushMatrix();
        
         glTranslatef( x1, y1, 0.0f );
         glScaled(0.6f, 1.0f, 1.0f);
-        glColor4f( 0.0f, 1.0, 1.0f, 1.0f );
+        glColor4f( 0.0f, 1.0, 1.0f, 0.3f );
         glutSolidSphere(0.04f,32,32);
         //glutSolidCube(0.1f);
         
         glPopMatrix();
         
         glDisable(GL_LIGHT1);
+        glDisable(GL_BLEND);
 
 
     }else if(type==2){
@@ -639,6 +645,7 @@ void drawTex(double x,double y,double w,double h,int type){
         glDisable( GL_TEXTURE_2D );
         glEnable(GL_LIGHTING);
         glEnable(GL_LIGHT1);
+        
         
         double g_angle3 = 2.0;
         double g_angle4 = 3.141592/4;
@@ -689,15 +696,15 @@ void drawTex(double x,double y,double w,double h,int type){
 void moveObj(){
     
     const double GRAVITY = -0.4;//重力
-    const double ON_FLOOR_MARGIN = 10.0;//床上判定の床からの距離
+    const double ON_FLOOR_MARGIN = 5.0;//床上判定の床からの距離
     const double OBJ_MARGIN = 10.0;
     const double MOVE_VEL = 3.0;
     const double JUMP_VEL = 10.0;
     
     chara.floor_pos_z=0.0;//自分の足下のz座標
     for(int i=0;i<cubes.size();i++){
-        if(chara.pos.x > cubes[i].lower_point3d.x && chara.pos.x < cubes[i].upper_point3d.x
-           && chara.pos.y > cubes[i].lower_point3d.y && chara.pos.y < cubes[i].upper_point3d.y){
+        if(chara.pos.x > cubes[i].lower_point3d.x  - OBJ_MARGIN && chara.pos.x < cubes[i].upper_point3d.x + OBJ_MARGIN
+           && chara.pos.y > cubes[i].lower_point3d.y   && chara.pos.y < cubes[i].upper_point3d.y  + OBJ_MARGIN){
             if(chara.floor_pos_z < cubes[i].upper_point3d.z){
                 chara.floor_pos_z = cubes[i].upper_point3d.z;
             }
@@ -705,9 +712,14 @@ void moveObj(){
     }
     
     if(chara.floor_pos_z+ON_FLOOR_MARGIN > chara.pos.z && chara.vel_z < 0.1){ //床上にいるか判定
-        chara.onfloor_flag= true;
-        chara.vel_z = 0.0;
-        chara.pos.z = chara.floor_pos_z+2;
+        if(chara.vel_z < -1){//跳ねる
+            chara.onfloor_flag = true;
+            chara.vel_z = chara.vel_z * (-0.5f);
+        }else{//跳ねない
+            chara.onfloor_flag= true;
+            chara.vel_z = 0.0;
+            chara.pos.z = chara.floor_pos_z+3;
+        }
         
     }else{ //床から離れている
         chara.onfloor_flag = false;
@@ -730,7 +742,7 @@ void moveObj(){
     
     for(int i=0;i<cubes.size();i++){ //障害物との当たり判定
         if(chara.pos.x > cubes[i].lower_point3d.x - OBJ_MARGIN && chara.pos.x < cubes[i].upper_point3d.x + OBJ_MARGIN
-           && chara.pos.y > cubes[i].lower_point3d.y - OBJ_MARGIN && chara.pos.y < cubes[i].upper_point3d.y + OBJ_MARGIN
+           && chara.pos.y > cubes[i].lower_point3d.y && chara.pos.y < cubes[i].upper_point3d.y + OBJ_MARGIN //あえて手前側のマージンは取らない
            && chara.pos.z + ON_FLOOR_MARGIN > cubes[i].lower_point3d.z  && chara.pos.z < cubes[i].upper_point3d.z){
             chara.pos.x=pre_pos.x;
             chara.pos.y=pre_pos.y;
@@ -742,7 +754,7 @@ void moveObj(){
     + Point(0,-chara.pos.z/env.z_ratio);
     chara.visible = true;
     for(int i=0;i<cubes.size();i++){
-        if(chara.pos.y > cubes[i].upper_point3d.y || chara.pos.x >cubes[i].upper_point3d.x){
+        if(chara.pos.y > cubes[i].upper_point3d.y + OBJ_MARGIN*0.7 || chara.pos.x >cubes[i].upper_point3d.x + OBJ_MARGIN*0.7){
             for(int j=0;j<3;j++){
                 if(isInPolygon(pos2d,cubes[i].surface[j])){
                     chara.visible = false;
@@ -775,7 +787,7 @@ bool isInPolygon(Point2d p, vector<int> v){//点が多角形の内部にあれ�
     int counter=0;
     int top_vertex = v[0];
     int bottom_vertex = v[0];
-    cout << p.x<<" "<<p.y<<endl;
+    //cout << p.x<<" "<<p.y<<endl;
     for(int i =1;i<v.size();i++){
         if(vertexes[top_vertex].point.y > vertexes[v[i]].point.y){
             top_vertex = v[i];
