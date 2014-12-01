@@ -192,6 +192,7 @@ public:
 
 class Charactor {
 public:
+    bool visible;
     bool onfloor_flag;
     Point3d pos;
     double vel_z;
@@ -201,6 +202,7 @@ public:
 };
 
 Charactor::Charactor(Point3d p, String file_name){
+    visible=true;
     onfloor_flag=true;
     pos=p;
     vel_z = 0.0;
@@ -232,6 +234,8 @@ Point inv_transform(Mat mat, Point p);
 void drawObj(Mat &input,Environment &env,Charactor &chara,vector<Vertex> &vertexes,vector<Cube> &cubes);
 void moveObj();
 void drawTex(double x,double y,double w,double h,int type);
+bool checkCrossLine(Point p1,Point p2,Point p3, Point p4);
+bool isInPolygon(Point2d p, vector<int> v);
 
 
 double distance(Point p1,Point p2){
@@ -577,8 +581,13 @@ void glut_display(){
     glEnd();
     
     glPopMatrix();
+    
+    
+    
+    
     drawTex(shade_pos2d.x, shade_pos2d.y, 20, 20, 2);
-    drawTex(pos2d.x, pos2d.y, 30, 30, 1);
+    if(chara.visible == true)drawTex(pos2d.x, pos2d.y, 20, 20, 1);
+    
     
     
     glFlush();
@@ -592,13 +601,71 @@ void glut_display(){
 
 void drawTex(double x,double y,double w,double h,int type){
     
-
-    glBindTexture(GL_TEXTURE_2D, g_tex[type]);
-    
     double x1=2.0*x/WINDOW_X-1.0;
     double y1=1.0-2.0*y/WINDOW_Y;
     double x2=2.0*(x+w)/WINDOW_X-1.0;
     double y2=1.0-2.0*(y+h)/WINDOW_Y;
+    
+    if(type==1){
+        
+        glDisable( GL_TEXTURE_2D );
+        glEnable(GL_LIGHTING);
+        glEnable(GL_LIGHT1);
+        
+        double g_angle3 = 2.0;
+        double g_angle4 = 3.141592/4;
+        GLfloat lightpos[]={static_cast<GLfloat>(5 * cos(g_angle4) * sin(g_angle3)),
+            static_cast<GLfloat>(5 * sin(g_angle4)),
+            static_cast<GLfloat>(5 * cos(g_angle4) * cos(g_angle3)),
+            1.0};
+        GLfloat diffuse[] = {0.8, 1.0, 1.0, 1.0};
+        glLightfv(GL_LIGHT1, GL_POSITION,lightpos);
+        glLightfv(GL_LIGHT1, GL_DIFFUSE,diffuse);
+        glPushMatrix();
+       
+        glTranslatef( x1, y1, 0.0f );
+        glScaled(0.6f, 1.0f, 1.0f);
+        glColor4f( 0.0f, 1.0, 1.0f, 1.0f );
+        glutSolidSphere(0.04f,32,32);
+        //glutSolidCube(0.1f);
+        
+        glPopMatrix();
+        
+        glDisable(GL_LIGHT1);
+
+
+    }else if(type==2){
+        
+        glDisable( GL_TEXTURE_2D );
+        glEnable(GL_LIGHTING);
+        glEnable(GL_LIGHT1);
+        
+        double g_angle3 = 2.0;
+        double g_angle4 = 3.141592/4;
+        GLfloat lightpos[]={static_cast<GLfloat>(5 * cos(g_angle4) * sin(g_angle3)),
+            static_cast<GLfloat>(5 * sin(g_angle4)),
+            static_cast<GLfloat>(5 * cos(g_angle4) * cos(g_angle3)),
+            1.0};
+        GLfloat diffuse[] = {0.4, 0.2, 0.2, 1.0};
+        glLightfv(GL_LIGHT1, GL_POSITION,lightpos);
+        glLightfv(GL_LIGHT1, GL_DIFFUSE,diffuse);
+        glPushMatrix();
+        
+        glTranslatef( x1, y1-0.016f, 0.0f );
+        glScaled(0.6f, 0.4f, 1.0f);
+        glColor4f( 0.0f, 1.0, 1.0f, 1.0f );
+        glutSolidSphere(0.04f,32,32);
+        //glutSolidCube(0.1f);
+        
+        glPopMatrix();
+        
+        glDisable(GL_LIGHT1);
+        
+        
+    }else{
+    glBindTexture(GL_TEXTURE_2D, g_tex[type]);
+    
+    
     glPushMatrix();
     glColor3d( 1.0, 1.0, 1.0 );
     glBegin( GL_QUADS );
@@ -613,7 +680,7 @@ void drawTex(double x,double y,double w,double h,int type){
     glEnd();
     
     glPopMatrix();
-    
+    }
 
 }
 
@@ -621,11 +688,11 @@ void drawTex(double x,double y,double w,double h,int type){
 
 void moveObj(){
     
-    const double GRAVITY = -0.3;//重力
+    const double GRAVITY = -0.4;//重力
     const double ON_FLOOR_MARGIN = 10.0;//床上判定の床からの距離
     const double OBJ_MARGIN = 10.0;
     const double MOVE_VEL = 3.0;
-    const double JUMP_VEL = 7.0;
+    const double JUMP_VEL = 10.0;
     
     chara.floor_pos_z=0.0;//自分の足下のz座標
     for(int i=0;i<cubes.size();i++){
@@ -671,6 +738,20 @@ void moveObj(){
         }
     }
     
+    Point pos2d = inv_transform(env.calibration_mat, Point(chara.pos.x,chara.pos.y)) + vertexes[vertexes[env.base_vertex].attached_vertex[2]].point
+    + Point(0,-chara.pos.z/env.z_ratio);
+    chara.visible = true;
+    for(int i=0;i<cubes.size();i++){
+        if(chara.pos.y > cubes[i].upper_point3d.y || chara.pos.x >cubes[i].upper_point3d.x){
+            for(int j=0;j<3;j++){
+                if(isInPolygon(pos2d,cubes[i].surface[j])){
+                    chara.visible = false;
+                    break;
+                }
+            }
+        }
+    }
+    
 }
 
 void drawObj(Mat &input,Environment &env,Charactor &chara,vector<Vertex> &vertexes,vector<Cube> &cubes){
@@ -688,6 +769,59 @@ void drawObj(Mat &input,Environment &env,Charactor &chara,vector<Vertex> &vertex
     circle(input, shade_pos2d,3,Scalar(0,0,0),2);//影
     circle(input, pos2d,3,Scalar(200,0,0),2);//キャラクター
     
+}
+
+bool isInPolygon(Point2d p, vector<int> v){//点が多角形の内部にあればtrue
+    int counter=0;
+    int top_vertex = v[0];
+    int bottom_vertex = v[0];
+    cout << p.x<<" "<<p.y<<endl;
+    for(int i =1;i<v.size();i++){
+        if(vertexes[top_vertex].point.y > vertexes[v[i]].point.y){
+            top_vertex = v[i];
+        }
+        if(vertexes[bottom_vertex].point.y < vertexes[v[i]].point.y){
+            bottom_vertex = v[i];
+        }
+    }
+
+    if(vertexes[top_vertex].point.y >= p.y || vertexes[bottom_vertex].point.y <= p.y){
+        return false;
+    }
+    
+    for(int i =0;i<v.size();i++){
+        if(i==(v.size()-1)){
+            if(checkCrossLine(p, Point(p.x+1000,p.y), vertexes[v[i]].point, vertexes[v[0]].point)){
+                counter++;
+            }
+        }else{
+            if(checkCrossLine(p, Point(p.x+1000,p.y), vertexes[v[i]].point, vertexes[v[i+1]].point)){
+                counter++;
+            }
+        }
+    }
+    
+    if(counter % 2 == 1){//奇数なら内部
+        return true;
+    }else{
+        return false;
+    }
+}
+
+bool checkCrossLine(Point a1,Point a2,Point b1, Point b2){
+    
+    // 外積:axb = ax*by - ay*bx
+    // 外積と使用して交差判定を行なう
+    double v1 = (a2.x - a1.x) * (b1.y - a1.y) - (a2.y - a1.y) * (b1.x - a1.x);
+    double v2 = (a2.x - a1.x) * (b2.y - a1.y) - (a2.y - a1.y) * (b2.x - a1.x);
+    double m1 = (b2.x - b1.x) * (a1.y - b1.y) - (b2.y - b1.y) * (a1.x - b1.x);
+    double m2 = (b2.x - b1.x) * (a2.y - b1.y) - (b2.y - b1.y) * (a2.x - b1.x);
+    // +-,-+だったら-値になるのでそれぞれを掛けて確認する
+    if((v1*v2 <= 0) && (m1*m2 <= 0)){
+        return true; // ２つとも左右にあった
+    }else{
+        return false;
+    }
 }
 
 void detecteObj(Mat &input,Environment &env,vector<Vertex> &vertexes,vector<Edge> &edges,vector<Cube> &cubes){
@@ -771,12 +905,7 @@ void detecteObj(Mat &input,Environment &env,vector<Vertex> &vertexes,vector<Edge
         for( int j= 0; j< approx_contours[i].size(); j++ ){//ある頂点について
             if(approx_contours[i][j].used==true)continue;//すでに頂点に決まっているものは無視
             TmpVertex tmp(i,j);
-            
-            //cout << i <<" "<< j << endl;
 
-            //circle(drawing, approx_contours[7][1].point, 3,Scalar(0,0,0),2);
-            //circle(drawing, approx_contours[6][6].point, 3,Scalar(200,0,0),2);
-            //cout << approx_contours[i][j].point << endl;
             for( int k = 1; k< approx_contours.size(); k++ ){
                 if(k==i)continue;
                 
@@ -1117,9 +1246,10 @@ void detecteObj(Mat &input,Environment &env,vector<Vertex> &vertexes,vector<Edge
                     if(approx_contours[k][l].vertex_id == i){
                         Surface suface;
                         for( int n= 0; n< approx_contours[k].size(); n++ ){
-                            suface.push_back(approx_contours[k][l].vertex_id);
+                            suface.push_back(approx_contours[k][n].vertex_id);
                         }
-                        cube.surface[cube_counter++]=suface;
+                        cube.surface[cube_counter]=suface;
+                        cube_counter++;
                     }
                 }
             }
