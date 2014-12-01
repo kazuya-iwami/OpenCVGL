@@ -99,6 +99,10 @@ enum Key_Type{
     KEY_SPACE
 };
 
+enum MODE{
+    MODE_PHOTO,
+    MODE_PLAY,
+};
 
 class TmpVertex {//０自身　1最短　２２番め
 public:
@@ -192,6 +196,7 @@ public:
 
 class Charactor {
 public:
+    int stay_time;
     bool visible;
     bool onfloor_flag;
     Point3d pos;
@@ -202,6 +207,7 @@ public:
 };
 
 Charactor::Charactor(Point3d p, String file_name){
+    stay_time=0;
     visible=true;
     onfloor_flag=true;
     pos=p;
@@ -236,6 +242,8 @@ void moveObj();
 void drawTex(double x,double y,double w,double h,int type);
 bool checkCrossLine(Point p1,Point p2,Point p3, Point p4);
 bool isInPolygon(Point2d p, vector<int> v);
+void drawLine(Point p1, Point p2);
+void drawSkelton();
 
 
 double distance(Point p1,Point p2){
@@ -245,7 +253,7 @@ double distance(Point p1,Point p2){
 
 
 void init_GL(int argc, char *argv[]);
-void init(Mat &input);
+void init(Mat &input,Mat &input_origin);
 void set_callback_functions();
 
 void glut_display();
@@ -264,8 +272,9 @@ GLuint g_tex[3];
 vector<Vertex> vertexes;//頂点のベクタ
 vector<Edge> edges;
 vector<Cube> cubes;
-Charactor chara(Point3d(-20,-20,0),"/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/charactor1.jpg");
+Charactor chara(Point3d(-2000,-20,0),"/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/charactor1.jpg");
 Environment env;
+MODE game_mode;
 
 bool keys[5];
 
@@ -321,6 +330,7 @@ int main (int argc, char **argv)
     
     //画像からの読み込み
     cv::Mat input;
+    cv::Mat input_origin;
     const char *input_file;
     const char* preset_file = "/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/figures4.jpg";
     
@@ -337,6 +347,8 @@ int main (int argc, char **argv)
         exit(0);
     }
 
+    input.copyTo(input_origin);
+    
     
     //cv::namedWindow("processed image",1);
     detecteObj(input,env, vertexes, edges,cubes);
@@ -350,7 +362,7 @@ int main (int argc, char **argv)
     init_GL(argc,argv);
     
     /* このプログラム特有の初期化 */
-    init(input);
+    init(input,input_origin);
     
     /* コールバック関数の登録 */
     set_callback_functions();
@@ -359,52 +371,10 @@ int main (int argc, char **argv)
     glutMainLoop();
     
     
-//    //ここからループ
-//    Mat background;
-//    input.copyTo(background);
-//    
-//    bool loop_flag=true;
-//    while(loop_flag){
-//        
-//        int k = waitKey(20);
-//                switch(k){
-//            case 'q':
-//            case 'Q':
-//                loop_flag=false;
-//                break;
-//            case 63234://left
-//                type=KEY_LEFT;
-//                break;
-//            case 63232://up
-//                type=KEY_UP;
-//                break;
-//            case 63235://right
-//                type=KEY_RIGHT;
-//                break;
-//            case 63233://down
-//                type=KEY_DOWN;
-//                break;
-//            case 32:
-//                type=KEY_SPACE;
-//                break;
-//                
-//        }
-//        
-//        moveObj(chara, type,vertexes,cubes);//キャラクターの移動
-//        
-//        input.copyTo(background);
-//        
-//        drawObj(background,env,chara,vertexes,cubes);//描画
-    
-        //cv::imshow("processed image",background);
-        
-  //  }
     
     
     return 0;
 }
-
-
 
 
 
@@ -419,16 +389,17 @@ void init_GL(int argc, char *argv[]){
     glutInitWindowSize(WINDOW_X,WINDOW_Y);
     glutCreateWindow(WINDOW_NAME);
     
-    glutIgnoreKeyRepeat(GL_TRUE);//キーボード長押し中の連続取得無視
+    //glutIgnoreKeyRepeat(GL_TRUE);//キーボード長押し中の連続取得無視
 }
 
-void init(Mat &input){
+void init(Mat &input,Mat &input_origin){
 
+    game_mode = MODE_PHOTO;
     
     // テクスチャを生成
     glEnable( GL_TEXTURE_2D );
     
-    glGenTextures( 3, g_tex);
+    glGenTextures( 2, g_tex);
     glBindTexture(GL_TEXTURE_2D, g_tex[0]);
     glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, input.cols,input.rows, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
@@ -442,29 +413,42 @@ void init(Mat &input){
     
     glTexSubImage2D(GL_TEXTURE_2D, 0, (TEXTURE_WIDTH - input.cols)/2, (TEXTURE_HEIGHT- input.rows)/2, input.cols, input.rows, GL_RGB, GL_UNSIGNED_BYTE, input.data);
     
+    glBindTexture(GL_TEXTURE_2D, g_tex[1]);
+    glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, input_origin.cols,input_origin.rows, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+    glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+    
+    cv::cvtColor(input_origin, input_origin, CV_BGR2RGB);
+    
+    glTexSubImage2D(GL_TEXTURE_2D, 0, (TEXTURE_WIDTH - input_origin.cols)/2, (TEXTURE_HEIGHT- input_origin.rows)/2, input_origin.cols, input_origin.rows, GL_RGB, GL_UNSIGNED_BYTE, input_origin.data);
     
     
     
-    const char* inputFileNames[3] = {"","/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/charactor2.jpg", "/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/shade.png"};
-    for(int i=1; i<3; i++){
-        
-        
-        cv::Mat input_ = cv::imread(inputFileNames[i],1);
-        // BGR -> RGBの変換
-        cv::cvtColor(input_, input_, CV_BGR2RGB);
-        glBindTexture(GL_TEXTURE_2D, g_tex[i]);
-        
-        glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, input_.cols,input_.rows, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
-        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
-        glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL );
-        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
-        
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, input_.cols, input_.rows, GL_RGB, GL_UNSIGNED_BYTE, input_.data);
-
-    }    
+    
+//    const char* inputFileNames[3] = {"","/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/green.png", "/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/shade.png"};
+//    for(int i=1; i<3; i++){
+//        
+//        
+//        cv::Mat input_ = cv::imread(inputFileNames[i],1);
+//        // BGR -> RGBの変換
+//        cv::cvtColor(input_, input_, CV_BGR2RGB);
+//        glBindTexture(GL_TEXTURE_2D, g_tex[i]);
+//        
+//        glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
+//        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, input_.cols,input_.rows, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+//        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+//        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+//        glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL );
+//        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+//        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+//        
+//        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, input_.cols, input_.rows, GL_RGB, GL_UNSIGNED_BYTE, input_.data);
+//
+//    }    
 
     //LoadGLTextures();
 }
@@ -499,16 +483,21 @@ void glut_special_up(int key, int x, int y){
 void glut_special(int key, int x,int y){
     if(key == GLUT_KEY_UP){
         keys[KEY_UP]=true;
+        chara.stay_time=0;
     }
     if(key == GLUT_KEY_DOWN){
         keys[KEY_DOWN]=true;
-        
+        chara.stay_time=0;
+
     }
     if(key == GLUT_KEY_RIGHT){
         keys[KEY_RIGHT]=true;
+        chara.stay_time=0;
+
     }
     if(key == GLUT_KEY_LEFT){
         keys[KEY_LEFT]=true;
+        chara.stay_time=0;
         
     }
     
@@ -525,6 +514,8 @@ void glut_keyboard(unsigned char key, int x, int y){
             break;
         case 32:
             keys[KEY_SPACE]=true;
+            chara.stay_time=0;
+
             break;
     }
     glutPostRedisplay();
@@ -539,7 +530,8 @@ void timer(int value){
 
 
 void glut_display(){
-
+    
+    
     
     //3D → 2D の座標変換
     Point pos2d = inv_transform(env.calibration_mat, Point(chara.pos.x,chara.pos.y)) + vertexes[vertexes[env.base_vertex].attached_vertex[2]].point
@@ -564,7 +556,8 @@ void glut_display(){
     
     
     glEnable( GL_TEXTURE_2D );
-    glBindTexture(GL_TEXTURE_2D, g_tex[0]);
+    if(game_mode == MODE_PHOTO)glBindTexture(GL_TEXTURE_2D, g_tex[1]);
+    if(game_mode == MODE_PLAY)glBindTexture(GL_TEXTURE_2D, g_tex[0]);
 
     glPushMatrix();
     // テクスチャを設定した画面サイズの矩形を描画
@@ -581,9 +574,8 @@ void glut_display(){
     glEnd();
     
     glPopMatrix();
-    
-    
-    
+
+    if(chara.stay_time > 120)drawSkelton();
     
     drawTex(shade_pos2d.x, shade_pos2d.y, 20, 20, 2);
     drawTex(pos2d.x, pos2d.y, 20, 20, 1);
@@ -636,8 +628,9 @@ void drawTex(double x,double y,double w,double h,int type){
         
         glPopMatrix();
         
-        glDisable(GL_LIGHT1);
         glDisable(GL_BLEND);
+        glDisable(GL_LIGHT1);
+        glDisable(GL_LIGHTING);
 
 
     }else if(type==2){
@@ -667,26 +660,30 @@ void drawTex(double x,double y,double w,double h,int type){
         glPopMatrix();
         
         glDisable(GL_LIGHT1);
-        
-        
-    }else{
-    glBindTexture(GL_TEXTURE_2D, g_tex[type]);
-    
-    
-    glPushMatrix();
-    glColor3d( 1.0, 1.0, 1.0 );
-    glBegin( GL_QUADS );
-    glTexCoord2d( 0.0, 1.0 );
-    glVertex2d( x1, y1 );
-    glTexCoord2d( 1.0, 1.0 );
-    glVertex2d( x2, y1 );
-    glTexCoord2d( 1.0, 0.0 );
-    glVertex2d( x2, y2 );
-    glTexCoord2d( 0.0, 0.0 );
-    glVertex2d( x1, y2 );
-    glEnd();
-    
-    glPopMatrix();
+        glDisable(GL_LIGHTING);
+
+
+//    else{
+//    //glDisable(GL_LIGHTING);
+//        glEnable( GL_TEXTURE_2D );
+//    glBindTexture(GL_TEXTURE_2D, g_tex[1]);
+////    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+////    glEnable(GL_BLEND);
+//    
+//    glPushMatrix();
+//    glColor3d( 1.0, 1.0, 1.0 );
+//    glBegin( GL_QUADS );
+//    glTexCoord2d( 0.0, 1.0 );
+//    glVertex2d( x1, y1 );
+//    glTexCoord2d( 1.0, 1.0 );
+//    glVertex2d( x2, y1 );
+//    glTexCoord2d( 1.0, 0.0 );
+//    glVertex2d( x2, y2 );
+//    glTexCoord2d( 0.0, 0.0 );
+//    glVertex2d( x1, y2 );
+//    glEnd();
+//    
+//    glPopMatrix();
     }
 
 }
@@ -701,69 +698,124 @@ void moveObj(){
     const double MOVE_VEL = 3.0;
     const double JUMP_VEL = 10.0;
     
-    chara.floor_pos_z=0.0;//自分の足下のz座標
-    for(int i=0;i<cubes.size();i++){
-        if(chara.pos.x > cubes[i].lower_point3d.x  - OBJ_MARGIN && chara.pos.x < cubes[i].upper_point3d.x + OBJ_MARGIN
-           && chara.pos.y > cubes[i].lower_point3d.y   && chara.pos.y < cubes[i].upper_point3d.y  + OBJ_MARGIN){
-            if(chara.floor_pos_z < cubes[i].upper_point3d.z){
-                chara.floor_pos_z = cubes[i].upper_point3d.z;
-            }
-        }
-    }
     
-    if(chara.floor_pos_z+ON_FLOOR_MARGIN > chara.pos.z && chara.vel_z < 0.1){ //床上にいるか判定
-        if(chara.vel_z < -1){//跳ねる
-            chara.onfloor_flag = true;
-            chara.vel_z = chara.vel_z * (-0.5f);
-        }else{//跳ねない
-            chara.onfloor_flag= true;
-            chara.vel_z = 0.0;
-            chara.pos.z = chara.floor_pos_z+3;
-        }
+    
+    if(game_mode == MODE_PHOTO){
+         if(keys[KEY_SPACE]){
+             chara.pos=Point3d(-20,-20,200);
+             game_mode = MODE_PLAY;
+         }
         
-    }else{ //床から離れている
-        chara.onfloor_flag = false;
-        chara.vel_z += GRAVITY;
-    }
-    
-    Point3d pre_pos = chara.pos;
-    
-    if(keys[KEY_UP])chara.pos.y+=MOVE_VEL;
-    if(keys[KEY_DOWN])chara.pos.y-=MOVE_VEL;
-    if(keys[KEY_LEFT])chara.pos.x-=MOVE_VEL;
-    if(keys[KEY_RIGHT])chara.pos.x+=MOVE_VEL;
-    if(keys[KEY_SPACE]){
-        if(chara.onfloor_flag == true){
-            chara.vel_z = JUMP_VEL;
-        }
-    }
-    
-    chara.pos.z += chara.vel_z;
-    
-    for(int i=0;i<cubes.size();i++){ //障害物との当たり判定
-        if(chara.pos.x > cubes[i].lower_point3d.x - OBJ_MARGIN && chara.pos.x < cubes[i].upper_point3d.x + OBJ_MARGIN
-           && chara.pos.y > cubes[i].lower_point3d.y && chara.pos.y < cubes[i].upper_point3d.y + OBJ_MARGIN //あえて手前側のマージンは取らない
-           && chara.pos.z + ON_FLOOR_MARGIN > cubes[i].lower_point3d.z  && chara.pos.z < cubes[i].upper_point3d.z){
-            chara.pos.x=pre_pos.x;
-            chara.pos.y=pre_pos.y;
-            
-        }
-    }
-    
-    Point pos2d = inv_transform(env.calibration_mat, Point(chara.pos.x,chara.pos.y)) + vertexes[vertexes[env.base_vertex].attached_vertex[2]].point
-    + Point(0,-chara.pos.z/env.z_ratio);
-    chara.visible = true;
-    for(int i=0;i<cubes.size();i++){
-        if(chara.pos.y > cubes[i].upper_point3d.y + OBJ_MARGIN*0.7 || chara.pos.x >cubes[i].upper_point3d.x + OBJ_MARGIN*0.7){
-            for(int j=0;j<3;j++){
-                if(isInPolygon(pos2d,cubes[i].surface[j])){
-                    chara.visible = false;
-                    break;
+    }else if( game_mode == MODE_PLAY){
+        
+        if(chara.stay_time >= 1000){
+            chara.stay_time = 1000;
+        }else chara.stay_time++;
+        
+        chara.floor_pos_z=0.0;//自分の足下のz座標
+        for(int i=0;i<cubes.size();i++){
+            if(chara.pos.x > cubes[i].lower_point3d.x  - OBJ_MARGIN && chara.pos.x < cubes[i].upper_point3d.x + OBJ_MARGIN
+               && chara.pos.y > cubes[i].lower_point3d.y   && chara.pos.y < cubes[i].upper_point3d.y  + OBJ_MARGIN){
+                if(chara.floor_pos_z < cubes[i].upper_point3d.z){
+                    chara.floor_pos_z = cubes[i].upper_point3d.z;
                 }
             }
         }
+        
+        if(chara.floor_pos_z+ON_FLOOR_MARGIN > chara.pos.z && chara.vel_z < 0.1){ //床上にいるか判定
+            if(chara.vel_z < -1){//跳ねる
+                chara.onfloor_flag = true;
+                chara.vel_z = chara.vel_z * (-0.5f);
+            }else{//跳ねない
+                chara.onfloor_flag= true;
+                chara.vel_z = 0.0;
+                chara.pos.z = chara.floor_pos_z+3;
+            }
+            
+        }else{ //床から離れている
+            chara.onfloor_flag = false;
+            chara.vel_z += GRAVITY;
+        }
+        
+        Point3d pre_pos = chara.pos;
+        
+        if(keys[KEY_UP])chara.pos.y+=MOVE_VEL;
+        if(keys[KEY_DOWN])chara.pos.y-=MOVE_VEL;
+        if(keys[KEY_LEFT])chara.pos.x-=MOVE_VEL;
+        if(keys[KEY_RIGHT])chara.pos.x+=MOVE_VEL;
+        if(keys[KEY_SPACE]){
+            if(chara.onfloor_flag == true){
+                chara.vel_z = JUMP_VEL;
+            }
+        }
+        
+        chara.pos.z += chara.vel_z;
+        
+        for(int i=0;i<cubes.size();i++){ //障害物との当たり判定
+            if(chara.pos.x > cubes[i].lower_point3d.x - OBJ_MARGIN && chara.pos.x < cubes[i].upper_point3d.x + OBJ_MARGIN
+               && chara.pos.y > cubes[i].lower_point3d.y && chara.pos.y < cubes[i].upper_point3d.y + OBJ_MARGIN //あえて手前側のマージンは取らない
+               && chara.pos.z + ON_FLOOR_MARGIN > cubes[i].lower_point3d.z  && chara.pos.z < cubes[i].upper_point3d.z){
+                chara.pos.x=pre_pos.x;
+                chara.pos.y=pre_pos.y;
+                
+            }
+        }
+        
+        Point pos2d = inv_transform(env.calibration_mat, Point(chara.pos.x,chara.pos.y)) + vertexes[vertexes[env.base_vertex].attached_vertex[2]].point
+        + Point(0,-chara.pos.z/env.z_ratio);
+        chara.visible = true;
+        for(int i=0;i<cubes.size();i++){
+            if(chara.pos.y > cubes[i].upper_point3d.y + OBJ_MARGIN*0.7 || chara.pos.x >cubes[i].upper_point3d.x + OBJ_MARGIN*0.7){
+                for(int j=0;j<3;j++){
+                    if(isInPolygon(pos2d,cubes[i].surface[j])){
+                        chara.visible = false;
+                        break;
+                    }
+                }
+            }
+        }
+        
     }
+}
+
+void drawSkelton(){
+    for(int i=0;i<cubes.size();i++){
+        Point p= vertexes[cubes[i].critical_vertex].point;
+        Point p0 = vertexes[vertexes[cubes[i].critical_vertex].attached_vertex[0]].point;
+        Point p1 = vertexes[vertexes[cubes[i].critical_vertex].attached_vertex[1]].point;
+        Point p2 = vertexes[vertexes[cubes[i].critical_vertex].attached_vertex[2]].point;
+        Point hide_vertex_p =  p0 + p1 - p + p2 -p;
+        
+        drawLine(p0+p1-p, hide_vertex_p);
+        drawLine(p0+p2-p, hide_vertex_p);
+        drawLine(p1+p2-p, hide_vertex_p);
+        drawLine(p, p0);
+        drawLine(p, p1);
+        drawLine(p, p2);
+        drawLine(p0, p0+p1-p);
+        drawLine(p0, p0+p2-p);
+        drawLine(p1, p1+p0-p);
+        drawLine(p1, p1+p2-p);
+        drawLine(p2, p2+p0-p);
+        drawLine(p2, p2+p1-p);
+    }
+
+}
+
+void drawLine(Point p1, Point p2){
+    glDisable( GL_TEXTURE_2D );
+
+    glBegin( GL_LINE_LOOP );
+        
+        //頂点指定
+        glColor3d(1.0, 1.0, 1.0); //
+        glVertex2d( 2.0*p1.x/WINDOW_X-1.0, 1.0-2.0*p1.y/WINDOW_Y );
+        glVertex2d( 2.0*p2.x/WINDOW_X-1.0, 1.0-2.0*p2.y/WINDOW_Y );
+        
+        //線描画スタイルの指定終了
+        glEnd();
     
+    glEnable( GL_TEXTURE_2D );
 }
 
 void drawObj(Mat &input,Environment &env,Charactor &chara,vector<Vertex> &vertexes,vector<Cube> &cubes){
