@@ -288,10 +288,7 @@ Mix_Chunk *se[2];
 
 int main (int argc, char **argv)
 {
-    
-    
-    
-    
+
 //    //動画からの読み込み
 //    // 1. prepare VideoCapture Object
 //    VideoCapture cap;
