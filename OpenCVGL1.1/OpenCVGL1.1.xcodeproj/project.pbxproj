@@ -10,6 +10,8 @@
 		E505D0BA1A1464C9007F988D /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E505D0B91A1464C9007F988D /* GLUT.framework */; };
 		E505D0BC1A1464DA007F988D /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E505D0BB1A1464DA007F988D /* OpenGL.framework */; };
 		E588C8E51A2BAB150095FAE9 /* blackboard.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E53B30D51A1B24D60027C30C /* blackboard.cpp */; };
+		E59691A81A2D5F710064E518 /* SDL2_mixer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E59691A61A2D5F710064E518 /* SDL2_mixer.framework */; };
+		E59691A91A2D5F710064E518 /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E59691A71A2D5F710064E518 /* SDL2.framework */; };
 		E59AE75E1A089D5800A470B8 /* libopencv_highgui.2.4.9.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E59AE75D1A089D5800A470B8 /* libopencv_highgui.2.4.9.dylib */; };
 		E59AE7601A089D6E00A470B8 /* libopencv_core.2.4.9.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E59AE75F1A089D6E00A470B8 /* libopencv_core.2.4.9.dylib */; };
 		E59AE7621A08AADE00A470B8 /* libopencv_objdetect.2.4.9.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E59AE7611A08AADE00A470B8 /* libopencv_objdetect.2.4.9.dylib */; };
@@ -41,6 +43,8 @@
 		E53B30D61A1B24D60027C30C /* blackboard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = blackboard.h; sourceTree = "<group>"; };
 		E55664691A108DCA00C5DAD6 /* face_detect.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = face_detect.cpp; sourceTree = "<group>"; };
 		E57781411A11D70C0081EC2F /* hand_detect.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hand_detect.cpp; sourceTree = "<group>"; };
+		E59691A61A2D5F710064E518 /* SDL2_mixer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2_mixer.framework; path = ../../../Library/Frameworks/SDL2_mixer.framework; sourceTree = "<group>"; };
+		E59691A71A2D5F710064E518 /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = ../../../Library/Frameworks/SDL2.framework; sourceTree = "<group>"; };
 		E59AE7531A08999E00A470B8 /* OpenCVGL1.1 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = OpenCVGL1.1; sourceTree = BUILT_PRODUCTS_DIR; };
 		E59AE7561A08999E00A470B8 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		E59AE75D1A089D5800A470B8 /* libopencv_highgui.2.4.9.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libopencv_highgui.2.4.9.dylib; path = ../../../../../usr/local/Cellar/opencv/2.4.9/lib/libopencv_highgui.2.4.9.dylib; sourceTree = "<group>"; };
@@ -60,6 +64,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E59691A81A2D5F710064E518 /* SDL2_mixer.framework in Frameworks */,
+				E59691A91A2D5F710064E518 /* SDL2.framework in Frameworks */,
 				E505D0BC1A1464DA007F988D /* OpenGL.framework in Frameworks */,
 				E505D0BA1A1464C9007F988D /* GLUT.framework in Frameworks */,
 				E5F108151A0B2CDC00997782 /* libopencv_photo.2.4.9.dylib in Frameworks */,
@@ -76,6 +82,8 @@
 		E59AE74A1A08999E00A470B8 = {
 			isa = PBXGroup;
 			children = (
+				E59691A61A2D5F710064E518 /* SDL2_mixer.framework */,
+				E59691A71A2D5F710064E518 /* SDL2.framework */,
 				E505D0BB1A1464DA007F988D /* OpenGL.framework */,
 				E505D0B91A1464C9007F988D /* GLUT.framework */,
 				E5F108141A0B2CDC00997782 /* libopencv_photo.2.4.9.dylib */,
@@ -266,6 +274,11 @@
 		E59AE75B1A08999E00A470B8 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(LOCAL_LIBRARY_DIR)/Frameworks",
+					"$(USER_LIBRARY_DIR)/Frameworks",
+				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
@@ -283,6 +296,11 @@
 		E59AE75C1A08999E00A470B8 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(LOCAL_LIBRARY_DIR)/Frameworks",
+					"$(USER_LIBRARY_DIR)/Frameworks",
+				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,

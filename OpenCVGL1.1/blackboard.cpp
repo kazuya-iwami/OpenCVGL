@@ -28,6 +28,9 @@
 #include <math.h>
 #include <iostream>
 
+#include <SDL2_mixer/SDL_mixer.h>
+#include <SDL2/SDL.h>
+
 using namespace cv;
 using namespace std;
 
@@ -278,6 +281,9 @@ MODE game_mode;
 
 bool keys[5];
 
+Mix_Music *BGM;
+Mix_Chunk *se[2];
+
 
 
 int main (int argc, char **argv)
@@ -395,6 +401,20 @@ void init_GL(int argc, char *argv[]){
 void init(Mat &input,Mat &input_origin){
 
     game_mode = MODE_PHOTO;
+    
+    
+    //設定
+    if(Mix_OpenAudio(44100,MIX_DEFAULT_FORMAT,2,1024)==-1)
+        exit(0);
+    //読み込み
+    se[0]=Mix_LoadWAV("/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/reflection3.wav");
+    BGM=Mix_LoadMUS("/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/music.mp3");
+    if(!se[0] || !BGM){
+        cout << "BGM error";
+        exit(0);
+    }
+    
+    Mix_PlayMusic(BGM,-1);
     
     // テクスチャを生成
     glEnable( GL_TEXTURE_2D );
@@ -724,6 +744,8 @@ void moveObj(){
         
         if(chara.floor_pos_z+ON_FLOOR_MARGIN > chara.pos.z && chara.vel_z < 0.1){ //床上にいるか判定
             if(chara.vel_z < -1){//跳ねる
+                Mix_PlayChannel(0, se[0], 0);
+
                 chara.onfloor_flag = true;
                 chara.vel_z = chara.vel_z * (-0.5f);
             }else{//跳ねない
