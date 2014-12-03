@@ -174,6 +174,8 @@ int genEdgeLabel(vector<Vertex> &vertex, vector<Edge> &edges);
 Edge_Kind getEdgeKind(Vertex_Kind kind, int edge_n,bool out_dir);
 bool calcEdge(vector<Vertex> &vertexes, Edge &edge);
 bool checkLocateRight(Point p1,Point p2);
+void setEdgeLabel(cv::Mat& im,vector<Vertex> &vertexes,vector<Edge> &edges);
+void arrow(Mat &img, Point pt1, Point pt2, Scalar color, int thickness, int lineType, int shift);
 
 double distance(Point p1,Point p2){
     double dst=sqrt(pow(p1.x-p2.x,2)+pow(p1.y-p2.y,2));
@@ -237,7 +239,7 @@ int main (int argc, char **argv)
     //画像からの読み込み
     cv::Mat input;
     const char *input_file;
-    const char* preset_file = "/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/figures4.jpg";
+    const char* preset_file = "/Users/kazuya/Git/OpenCVGL/OpenCVGL1.1/figure13.jpg";
     
     if(argc==2){
         input_file=argv[1];
@@ -254,6 +256,7 @@ int main (int argc, char **argv)
     
     detecteVertex(input, vertexes, edges);
     genEdgeLabel(vertexes, edges);
+    setEdgeLabel(input, vertexes, edges);
     
     cv::namedWindow("processed image",1);
 
@@ -265,6 +268,17 @@ int main (int argc, char **argv)
     
     
     return 0;
+}
+
+
+double getSignedArea(vector<Contour> c){
+    double s=0;
+    for(int i=0;i<c.size();i++){
+        Point a = c[i].point;
+        Point b = (i<c.size()-1) ? c[i+1].point : c[0].point;
+        s += a.x * b.y - a.y * b.x;
+    }
+    return s;
 }
 
 void detecteVertex(Mat &input,vector<Vertex> &vertexes,vector<Edge> &edges){
@@ -305,9 +319,9 @@ void detecteVertex(Mat &input,vector<Vertex> &vertexes,vector<Edge> &edges){
         }
         approx_contours.push_back(tmp_approx);
         
-//            for(int j=0; j<(int)contours[i].size(); j++){//特徴点の表示
-//                line(drawing, contours[i][j], contours[i][j], Scalar(200,250,250));
-//            }
+            for(int j=0; j<(int)contours[i].size(); j++){//特徴点の表示
+                line(input, contours[i][j], contours[i][j], Scalar(200,250,250));
+            }
         
         Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
         drawContours( drawing, contours, i, color, 1, 8, hierarchy, 0, Point() );
@@ -450,8 +464,8 @@ void detecteVertex(Mat &input,vector<Vertex> &vertexes,vector<Edge> &edges){
             //まず同じ方向にある頂点の組を１つ見つける
             int other_0,other_1;//同じ方向の頂点に属していない特徴点
             //内積を求め、正なら同じ方向
-            if((approx_contours[tmp_vertexes[i].k[0]][next_0].point - vertexes[i].point)
-                .dot(approx_contours[tmp_vertexes[i].k[1]][next_1].point - vertexes[i].point)>0){
+            if(acos((approx_contours[tmp_vertexes[i].k[0]][next_0].point - vertexes[i].point)
+                .dot(approx_contours[tmp_vertexes[i].k[1]][next_1].point - vertexes[i].point)/norm(approx_contours[tmp_vertexes[i].k[0]][next_0].point - vertexes[i].point)/norm(approx_contours[tmp_vertexes[i].k[1]][next_1].point - vertexes[i].point))<0.349066){
                 
                 if(norm(approx_contours[tmp_vertexes[i].k[0]][next_0].point - vertexes[i].point)//隣の頂点の値を取得
                    < norm(approx_contours[tmp_vertexes[i].k[1]][next_1].point - vertexes[i].point)){
@@ -460,8 +474,8 @@ void detecteVertex(Mat &input,vector<Vertex> &vertexes,vector<Edge> &edges){
                 
                 other_0=prev_0;
                 other_1=prev_1;
-            }else if((approx_contours[tmp_vertexes[i].k[0]][next_0].point - vertexes[i].point)
-                     .dot(approx_contours[tmp_vertexes[i].k[1]][prev_1].point - vertexes[i].point)>0){
+            }else if(acos((approx_contours[tmp_vertexes[i].k[0]][next_0].point - vertexes[i].point)
+                     .dot(approx_contours[tmp_vertexes[i].k[1]][prev_1].point - vertexes[i].point)/norm((approx_contours[tmp_vertexes[i].k[0]][next_0].point - vertexes[i].point))/norm(approx_contours[tmp_vertexes[i].k[1]][prev_1].point - vertexes[i].point))<0.349066){
                 
                 if(norm(approx_contours[tmp_vertexes[i].k[0]][next_0].point - vertexes[i].point)//隣の頂点の値を取得
                    < norm(approx_contours[tmp_vertexes[i].k[1]][prev_1].point - vertexes[i].point)){
@@ -470,8 +484,8 @@ void detecteVertex(Mat &input,vector<Vertex> &vertexes,vector<Edge> &edges){
                 
                 other_0=prev_0;
                 other_1=next_1;
-            }else if((approx_contours[tmp_vertexes[i].k[0]][prev_0].point - vertexes[i].point)
-                     .dot(approx_contours[tmp_vertexes[i].k[1]][next_1].point - vertexes[i].point)>0){
+            }else if(acos((approx_contours[tmp_vertexes[i].k[0]][prev_0].point - vertexes[i].point)
+                     .dot(approx_contours[tmp_vertexes[i].k[1]][next_1].point - vertexes[i].point)/norm(approx_contours[tmp_vertexes[i].k[0]][prev_0].point - vertexes[i].point)/norm(approx_contours[tmp_vertexes[i].k[1]][next_1].point - vertexes[i].point))<0.349066){
                 
                 if(norm(approx_contours[tmp_vertexes[i].k[0]][prev_0].point - vertexes[i].point)//隣り合う頂点の登録
                    < norm(approx_contours[tmp_vertexes[i].k[1]][next_1].point - vertexes[i].point)){
@@ -480,8 +494,8 @@ void detecteVertex(Mat &input,vector<Vertex> &vertexes,vector<Edge> &edges){
                 
                 other_0=next_0;
                 other_1=prev_1;
-            }else if((approx_contours[tmp_vertexes[i].k[0]][prev_0].point - vertexes[i].point)
-                     .dot(approx_contours[tmp_vertexes[i].k[1]][prev_1].point - vertexes[i].point)>0){
+            }else if(acos((approx_contours[tmp_vertexes[i].k[0]][prev_0].point - vertexes[i].point)
+                     .dot(approx_contours[tmp_vertexes[i].k[1]][prev_1].point - vertexes[i].point)/norm(approx_contours[tmp_vertexes[i].k[0]][prev_0].point - vertexes[i].point)/norm(approx_contours[tmp_vertexes[i].k[1]][prev_1].point - vertexes[i].point))<0.349066){
                 
                 if(norm(approx_contours[tmp_vertexes[i].k[0]][prev_0].point - vertexes[i].point)//隣り合う頂点の登録
                    < norm(approx_contours[tmp_vertexes[i].k[1]][prev_1].point - vertexes[i].point)){
@@ -731,7 +745,45 @@ void detecteVertex(Mat &input,vector<Vertex> &vertexes,vector<Edge> &edges){
             }
         }
     }
+    int max=(int)approx_contours.size()-1;
+    bool flag ;
+    if(getSignedArea(approx_contours[max]) > 0){
+        flag = true;
+    }else flag = false;
     
+    for(int i=0;i<approx_contours[max].size();i++){
+        if(i==approx_contours[max].size()-1){
+            for(int j=0; j<edges.size();j++){
+                if(edges[j].vertex_number1==approx_contours[max][i].vertex_id && edges[j].vertex_number2==approx_contours[max][0].vertex_id){
+                    edges[j].edge_kind = (flag == true) ? KIND_FORE : KIND_BACK;
+                }
+                if(edges[j].vertex_number1==approx_contours[max][0].vertex_id && edges[j].vertex_number2==approx_contours[max][i].vertex_id){
+                    edges[j].edge_kind = (flag== true) ? KIND_BACK : KIND_FORE;
+                }
+            }
+        }else{
+            for(int j=0; j<edges.size();j++){
+                if(edges[j].vertex_number1==approx_contours[max][i].vertex_id && edges[j].vertex_number2==approx_contours[max][i+1].vertex_id){
+                    edges[j].edge_kind = (flag== true) ? KIND_FORE : KIND_BACK;
+                }
+                if(edges[j].vertex_number1==approx_contours[max][i+1].vertex_id && edges[j].vertex_number2==approx_contours[max][i].vertex_id){
+                    edges[j].edge_kind = (flag== true) ? KIND_BACK : KIND_FORE;
+                }
+            }
+        }
+    }
+    
+//    edges[0].edge_kind=KIND_BACK;
+//    edges[1].edge_kind=KIND_FORE;
+//    edges[3].edge_kind=KIND_FORE;
+//    edges[4].edge_kind=KIND_FORE;
+//    edges[7].edge_kind=KIND_BACK;
+//    edges[8].edge_kind=KIND_FORE;
+//    edges[9].edge_kind=KIND_FORE;
+//    edges[15].edge_kind=KIND_BACK;
+//    edges[16].edge_kind=KIND_FORE;
+//    edges[17].edge_kind=KIND_BACK;
+//    edges[20].edge_kind=KIND_FORE;
     
     
     for(int i=0;i<vertexes.size();i++){//頂点のラベル表示
@@ -777,6 +829,67 @@ void setLabel(cv::Mat& im, const std::string label, std::vector<cv::Point>& cont
     cv::putText(im, label, pt, fontface, scale,color, thickness, 8);
 }
 
+
+void arrow(Mat &img, Point pt1, Point pt2, Scalar color, int thickness=3, int lineType=8, int shift=0)
+{
+    line(img,pt1,pt2,color,thickness,lineType,shift);
+    float vx = (float)(pt2.x - pt1.x);
+    float vy = (float)(pt2.y - pt1.y);
+    float v = sqrt( vx*vx + vy*vy );
+    float ux = vx / v;
+    float uy = vy / v;
+    //矢印の幅の部分
+    float w=5,h=10;
+    CvPoint ptl,ptr;
+    ptl.x = (int)((float)pt2.x - uy*w - ux*h);
+    ptl.y = (int)((float)pt2.y + ux*w - uy*h);
+    ptr.x = (int)((float)pt2.x + uy*w - ux*h);
+    ptr.y = (int)((float)pt2.y - ux*w - uy*h);
+    //矢印の先端を描画する
+    line(img,pt2,ptl,color,thickness,lineType,shift);
+    line(img,pt2,ptr,color,thickness,lineType,shift);
+}
+
+
+void setEdgeLabel(cv::Mat& im,vector<Vertex> &vertexes,vector<Edge> &edges){
+    int fontface = cv::FONT_HERSHEY_SIMPLEX;
+    double scale = 1;
+    int thickness = 2;
+    
+    for(int i=0;i<edges.size();i++){
+        if(edges[i].edge_kind == KIND_EDGE_NONE){
+            for(int j=0; j<vertexes[edges[i].vertex_number2].existing_kind_list.size();j++){
+                if(vertexes[edges[i].vertex_number2].existing_kind_list[j].flag==false)continue;
+                if(getEdgeKind(vertexes[edges[i].vertex_number2].existing_kind_list[j].vertex_kind, edges[i].edge_number2, false) == KIND_PLUS){
+                    cv::putText(im, "+", (vertexes[edges[i].vertex_number1].point +vertexes[edges[i].vertex_number2].point )*0.5, fontface, scale,Scalar(0,0,200), thickness, 8);
+                }
+                if(getEdgeKind(vertexes[edges[i].vertex_number2].existing_kind_list[j].vertex_kind, edges[i].edge_number2, false) == KIND_MINUS){
+                    cv::putText(im, "-", (vertexes[edges[i].vertex_number1].point +vertexes[edges[i].vertex_number2].point )*0.5, fontface, scale,Scalar(0,0,200), thickness, 8);
+                }
+                if(getEdgeKind(vertexes[edges[i].vertex_number2].existing_kind_list[j].vertex_kind, edges[i].edge_number2, false) == KIND_FORE){
+                    arrow(im,vertexes[edges[i].vertex_number1].point+(vertexes[edges[i].vertex_number2].point -vertexes[edges[i].vertex_number1].point)*0.4,vertexes[edges[i].vertex_number1].point+(vertexes[edges[i].vertex_number2].point -vertexes[edges[i].vertex_number1].point)*0.6,Scalar(0,0,200));
+                }
+                if(getEdgeKind(vertexes[edges[i].vertex_number2].existing_kind_list[j].vertex_kind, edges[i].edge_number2, false) == KIND_BACK){
+                    arrow(im,vertexes[edges[i].vertex_number1].point+(vertexes[edges[i].vertex_number2].point -vertexes[edges[i].vertex_number1].point)*0.6,vertexes[edges[i].vertex_number1].point+(vertexes[edges[i].vertex_number2].point -vertexes[edges[i].vertex_number1].point)*0.4,Scalar(0,0,200));
+                }
+
+            }
+        }
+        if(edges[i].edge_kind == KIND_PLUS){
+            cv::putText(im, "+", (vertexes[edges[i].vertex_number1].point +vertexes[edges[i].vertex_number2].point )*0.5, fontface, scale,Scalar(0,0,200), thickness, 8);
+        }
+        if(edges[i].edge_kind == KIND_MINUS){
+            cv::putText(im, "-", (vertexes[edges[i].vertex_number1].point +vertexes[edges[i].vertex_number2].point )*0.5, fontface, scale,Scalar(0,0,200), thickness, 8);
+        }
+        if(edges[i].edge_kind == KIND_FORE){
+            arrow(im,vertexes[edges[i].vertex_number1].point+(vertexes[edges[i].vertex_number2].point -vertexes[edges[i].vertex_number1].point)*0.4,vertexes[edges[i].vertex_number1].point+(vertexes[edges[i].vertex_number2].point -vertexes[edges[i].vertex_number1].point)*0.6,Scalar(0,0,200));
+        }
+        if(edges[i].edge_kind == KIND_BACK){
+            arrow(im,vertexes[edges[i].vertex_number1].point+(vertexes[edges[i].vertex_number2].point -vertexes[edges[i].vertex_number1].point)*0.6,vertexes[edges[i].vertex_number1].point+(vertexes[edges[i].vertex_number2].point -vertexes[edges[i].vertex_number1].point)*0.4,Scalar(0,0,200));
+        }
+    }
+    
+}
 
 
 
@@ -892,16 +1005,16 @@ bool calcEdge(vector<Vertex> &vertexes,Edge &edge){//何か削除したら戻り
     memset(erase_flag2,0,sizeof(erase_flag2));
     
     for(int i =0; i<vertexes[edge.vertex_number1].existing_kind_list.size();i++){
-        if(vertexes[edge.vertex_number1].existing_kind_list[i].flag==false)break;
+        if(vertexes[edge.vertex_number1].existing_kind_list[i].flag==false)continue;
         for(int j=0; j<vertexes[edge.vertex_number2].existing_kind_list.size();j++){
-            if(vertexes[edge.vertex_number2].existing_kind_list[j].flag==false)break;
+            if(vertexes[edge.vertex_number2].existing_kind_list[j].flag==false)continue;
 
             if((getEdgeKind(vertexes[edge.vertex_number1].existing_kind_list[i].vertex_kind, edge.edge_number1, true) ==
-               getEdgeKind(vertexes[edge.vertex_number2].existing_kind_list[j].vertex_kind, edge.edge_number2, true) &&
+               getEdgeKind(vertexes[edge.vertex_number2].existing_kind_list[j].vertex_kind, edge.edge_number2, false) &&
                edge.edge_kind==KIND_EDGE_NONE)
                ||
                (getEdgeKind(vertexes[edge.vertex_number1].existing_kind_list[i].vertex_kind, edge.edge_number1, true) ==
-                getEdgeKind(vertexes[edge.vertex_number2].existing_kind_list[j].vertex_kind, edge.edge_number2, true) &&
+                getEdgeKind(vertexes[edge.vertex_number2].existing_kind_list[j].vertex_kind, edge.edge_number2, false) &&
                 getEdgeKind(vertexes[edge.vertex_number1].existing_kind_list[i].vertex_kind, edge.edge_number1, true) == edge.edge_kind)){//２頂点の型の組み合わせが存在 かつ　指定されていればその辺の型を優先
                    
                 //Edge_Kind test1=getEdgeKind(vertexes[edge.vertex_number1].existing_kind_list[i].vertex_kind, edge.edge_number1, true);
@@ -932,18 +1045,25 @@ bool calcEdge(vector<Vertex> &vertexes,Edge &edge){//何か削除したら戻り
     int n2=0;
     Edge_Kind tmp_edge=KIND_EDGE_NONE;
     for(int i =0; i<vertexes[edge.vertex_number1].existing_kind_list.size();i++){
-        if(vertexes[edge.vertex_number1].existing_kind_list[i].flag)n1++;
-        tmp_edge=getEdgeKind(vertexes[edge.vertex_number1].existing_kind_list[i].vertex_kind, edge.edge_number1, true);
+        if(vertexes[edge.vertex_number1].existing_kind_list[i].flag){
+            n1++;
+            tmp_edge=getEdgeKind(vertexes[edge.vertex_number1].existing_kind_list[i].vertex_kind, edge.edge_number1, true);
+        }
     }
     for(int i =0; i<vertexes[edge.vertex_number2].existing_kind_list.size();i++){
-        if(vertexes[edge.vertex_number2].existing_kind_list[i].flag)n2++;
+        if(vertexes[edge.vertex_number2].existing_kind_list[i].flag){
+            n2++;
+            tmp_edge=getEdgeKind(vertexes[edge.vertex_number2].existing_kind_list[i].vertex_kind, edge.edge_number2, false);
+        }
     }
     
     if(n1==1 && n2==1){
         edge.edge_kind=tmp_edge;
+        printf("%d-%d : %d\n",edge.vertex_number1,edge.vertex_number2,(int)edge.edge_kind);
     }
     if(n1==0 || n2==0){
         edge.edge_kind=KIND_EDGE_ERR;
+        printf("%d-%d : %d",edge.vertex_number1,edge.vertex_number2,(int)edge.edge_kind);
         printf("CALC ERR!!\n");
     }
     
