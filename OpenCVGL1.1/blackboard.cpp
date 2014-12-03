@@ -253,7 +253,7 @@ int main (int argc, char **argv)
     }
     
     detecteVertex(input, vertexes, edges);
-    //genEdgeLabel(vertexes, edges);
+    genEdgeLabel(vertexes, edges);
     
     cv::namedWindow("processed image",1);
 
@@ -743,7 +743,7 @@ void detecteVertex(Mat &input,vector<Vertex> &vertexes,vector<Edge> &edges){
 }
 
 bool checkLocateRight(Point p1,Point p2){ // P1→P2について　trueなら右にfalseなら左にある。
-    if((p1.x * p2.y - p1.y * p2.x) < 0){
+    if((p1.x * p2.y - p1.y * p2.x) > 0){
         return  true;
     }else return false;
 }
@@ -904,8 +904,8 @@ bool calcEdge(vector<Vertex> &vertexes,Edge &edge){//何か削除したら戻り
                 getEdgeKind(vertexes[edge.vertex_number2].existing_kind_list[j].vertex_kind, edge.edge_number2, true) &&
                 getEdgeKind(vertexes[edge.vertex_number1].existing_kind_list[i].vertex_kind, edge.edge_number1, true) == edge.edge_kind)){//２頂点の型の組み合わせが存在 かつ　指定されていればその辺の型を優先
                    
-                Edge_Kind test1=getEdgeKind(vertexes[edge.vertex_number1].existing_kind_list[i].vertex_kind, edge.edge_number1, true);
-                Edge_Kind test2=getEdgeKind(vertexes[edge.vertex_number2].existing_kind_list[j].vertex_kind, edge.edge_number2, true);
+                //Edge_Kind test1=getEdgeKind(vertexes[edge.vertex_number1].existing_kind_list[i].vertex_kind, edge.edge_number1, true);
+                //Edge_Kind test2=getEdgeKind(vertexes[edge.vertex_number2].existing_kind_list[j].vertex_kind, edge.edge_number2, true);
                    
                 erase_flag1[i]=true;//存在したら消さない
                 erase_flag2[j]=true;
@@ -918,6 +918,7 @@ bool calcEdge(vector<Vertex> &vertexes,Edge &edge){//何か削除したら戻り
         if(erase_flag1[i]==false && vertexes[edge.vertex_number1].existing_kind_list[i].flag){
             vertexes[edge.vertex_number1].existing_kind_list[i].flag = false;
             erase_flag=true;
+
         }
     }
     for(int i =0; i<vertexes[edge.vertex_number2].existing_kind_list.size();i++){
